@@ -1,0 +1,64 @@
+# --- Dependencies ---
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# --- Build & Output ---
+dist/
+build/
+.tmp/
+.cache/
+coverage/
+logs/
+*.log
+
+# --- Environment & Config ---
+.env
+.env.*.local
+.env.local
+.env.production
+.env.development
+.env.test
+*.pid
+*.seed
+
+# --- OS / IDE files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Temporary files ---
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# --- Testing ---
+/test-results/
+/coverage/
+jest-report.json
+mochawesome-report/
+.nyc_output/
+
+# --- TypeScript (if you add it later) ---
+*.tsbuildinfo
+
+# --- Docker ---
+docker-compose.override.yml
+.dockerignore
+*.tar
+
+# --- Logs & runtime data ---
+pids
+*.pid.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- AWS / Deployment ---
+.aws/
+.vercel/
+.netlify/

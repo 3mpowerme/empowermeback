@@ -1,0 +1,104 @@
+{
+  "resumen_ejecutivo": {
+    "descripcion_general": "Breve resumen del negocio, su propuesta de valor y oportunidad de mercado.",
+    "objetivos_clave": ["Objetivo 1", "Objetivo 2", "Objetivo 3"],
+    "suposiciones_clave": ["Suposición 1", "Suposición 2"]
+  },
+
+  "analisis_de_mercado": {
+    "tamaño_mercado": {
+      "estimado_anual_clp": {
+        "min": 0,
+        "max": 0
+      },
+      "fuente_referencial": "Ejemplo: datos sectoriales, informes públicos"
+    },
+    "segmento_objetivo": {
+      "perfil_cliente": "Ejemplo: PYMEs tecnológicas B2B",
+      "rango_edad": "25–45 años",
+      "nivel_socioeconomico": "Medio-alto",
+      "comportamientos_clave": [
+        "Prefiere compras digitales",
+        "Busca eficiencia y automatización"
+      ]
+    },
+    "competencia": [
+      {
+        "tipo": "directa | indirecta",
+        "descripcion": "Competidor o solución referencial",
+        "fortalezas": ["Fortaleza 1", "Fortaleza 2"],
+        "debilidades": ["Debilidad 1", "Debilidad 2"]
+      }
+    ],
+    "ventaja_competitiva": "Explica qué diferencia al negocio frente a competidores."
+  },
+
+  "estrategia_comercial": {
+    "propuesta_valor": "Mensaje principal al cliente.",
+    "canales_distribucion": [
+      "E-commerce",
+      "Redes sociales",
+      "Alianzas estratégicas"
+    ],
+    "estrategia_precio": {
+      "modelo": "Suscripción | Margen | Freemium | Otros",
+      "precio_promedio_clp": 0
+    },
+    "plan_marketing": [
+      "Estrategia SEO y contenido",
+      "Campañas segmentadas en redes sociales",
+      "Programas de referidos"
+    ]
+  },
+
+  "estructura_operativa": {
+    "recursos_clave": [
+      "Equipo técnico especializado",
+      "Infraestructura tecnológica (cloud, SaaS, etc.)"
+    ],
+    "socios_clave": ["Proveedor logístico", "Agencia de marketing digital"],
+    "actividades_clave": [
+      "Desarrollo de producto",
+      "Atención al cliente",
+      "Gestión de ventas"
+    ]
+  },
+
+  "proyecciones_financieras": {
+    "inversion_inicial_clp": {
+      "min": 0,
+      "max": 0
+    },
+    "costos_operativos_mensuales_clp": {
+      "min": 0,
+      "max": 0
+    },
+    "ingresos_estimados_anuales_clp": {
+      "min": 0,
+      "max": 0
+    },
+    "punto_equilibrio_meses": 0,
+    "margen_utilidad_estimado_pct": 0
+  },
+
+  "riesgos_y_mitigacion": [
+    {
+      "riesgo": "Baja demanda inicial",
+      "probabilidad_pct": 40,
+      "impacto_pct": 60,
+      "estrategia_mitigacion": "Campañas piloto antes del lanzamiento"
+    }
+  ],
+
+  "conclusiones_y_recomendaciones": {
+    "viabilidad_general": "Alta | Media | Baja",
+    "resumen_claves": [
+      "Oportunidad atractiva en mercado creciente",
+      "Se recomienda ajustar precios por segmento"
+    ],
+    "siguientes_pasos": [
+      "Validar hipótesis con estudio de mercado",
+      "Definir estructura legal y fiscal"
+    ]
+  }
+}
