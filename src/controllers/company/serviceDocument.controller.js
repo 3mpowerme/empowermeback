@@ -9,7 +9,7 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 })
 
-const REGION = process.env.AWS_REGION
+const REGION = process.env.COGNITO_REGION
 const BUCKET = process.env.AWS_S3_BUCKET_DOCUMENTS
 
 const safeName = (name) =>
@@ -68,7 +68,7 @@ export const ServiceDocumentController = {
     console.log('service', service)
     const id = req.params.id
     const { content_type, file_name } = req.body || {}
-
+    const { companyId } = req.params
     if (!content_type) {
       return res.status(400).json({
         error: 'ValidationError',
@@ -76,14 +76,15 @@ export const ServiceDocumentController = {
       })
     }
 
+    /*
     const doc = await ServiceDocument.getById(id, service.id)
     console.log('doc', doc)
     if (!doc) return res.status(404).json({ error: 'DocumentNotFound' })
-
+*/
     const key = buildKeyForServiceDoc({
       serviceId: service.id,
-      docId: id,
-      fileName: file_name || `${doc.name}.bin`,
+      companyId: companyId,
+      fileName: file_name,
     })
     const { url } = await getPresignedPutUrl({
       bucket: BUCKET,
@@ -94,9 +95,9 @@ export const ServiceDocumentController = {
     console.log('url', url)
 
     const object_url = buildObjectUrl(BUCKET, REGION, key)
-    await ServiceDocument.updateFields(id, service.id, { url: object_url })
+    //await ServiceDocument.updateFields(id, service.id, { url: object_url })
 
-    res.json({ upload_url: url, key })
+    res.json({ upload_url: url, key, object_url })
   },
 
   async getViewUrl(req, res) {

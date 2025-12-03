@@ -5,29 +5,39 @@ export const CompanySetup = {
     company_id,
     hasEmployees,
     is_registered_company,
+    hasStartedActivities,
     about,
     address_id,
-    business_sector_id
+    business_sector_id,
+    sectorOther
   ) {
-    const [result] = await db.query(
-      'INSERT INTO company_setup (company_id, hasEmployees, is_registered_company, about, address_id, business_sector_id) VALUES (?,?,?,?,?,?)',
-      [
+    try {
+      const [result] = await db.query(
+        'INSERT INTO company_setup (company_id, hasEmployees, is_registered_company, hasStartedActivities, about, address_id, business_sector_id, business_sector_other) VALUES (?,?,?,?,?,?,?,?)',
+        [
+          company_id,
+          hasEmployees,
+          is_registered_company,
+          hasStartedActivities,
+          about,
+          address_id,
+          business_sector_id,
+          sectorOther,
+        ]
+      )
+      return {
+        id: result.insertId,
         company_id,
         hasEmployees,
         is_registered_company,
         about,
         address_id,
         business_sector_id,
-      ]
-    )
-    return {
-      id: result.insertId,
-      company_id,
-      hasEmployees,
-      is_registered_company,
-      about,
-      address_id,
-      business_sector_id,
+        hasStartedActivities,
+        sectorOther,
+      }
+    } catch (error) {
+      console.error('CompanySetup create error', error)
     }
   },
   async getByCompanyId(company_id) {

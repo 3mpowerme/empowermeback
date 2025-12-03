@@ -50,26 +50,45 @@ export async function loginController(req, res) {
     const payload = await validateAccessToken(result.accessToken)
     const sub = payload?.sub
     let featureId = 1 // Home by default
+    let todayFocusUrl = '/dashboard' // Home by default
+    let todayFocusResult
     if (sub) {
       const { userId } = await UserIdentity.getUserIdBySub(sub)
+      result.userId = userId
       const companyResult = await Company.getCompanyIdByUserId(userId)
       const { id: companyId } = companyResult
-      const todayFocusResult =
-        await TodayFocus.getTodayFocusByCompanyId(companyId)
+      todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(companyId)
       console.log('todayFocusResult', todayFocusResult)
-      /*
+
       if (todayFocusResult) {
-        if (todayFocusResult?.todayFocus?.includes('Crea tu empresa'))
+        if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
           featureId = 2
-        if (todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad'))
+          todayFocusUrl = '/dashboard/buildCompany'
+        }
+        if (
+          todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')
+        ) {
           featureId = 3
-        if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial'))
+          todayFocusUrl = '/dashboard/taxes_and_accounting'
+        }
+
+        if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
           featureId = 6
-        if (todayFocusResult?.todayFocus?.includes('Logo')) featureId = 7
+          todayFocusUrl = '/dashboard/business_orientation'
+        }
+
+        if (todayFocusResult?.todayFocus?.includes('Logo')) {
+          featureId = 7
+          todayFocusUrl = '/dashboard/graphic_design/logo_design'
+        }
       }
-      */
     }
-    res.json({ ...result, featureId })
+    res.json({
+      ...result,
+      todayFocusFeatureId: featureId || 1,
+      todayFocus: todayFocusResult?.todayFocus || 'Home',
+      todayFocusUrl,
+    })
   } catch (error) {
     console.error('login error', error)
     res.status(401).json({ error: error.message || 'Internal server error' })

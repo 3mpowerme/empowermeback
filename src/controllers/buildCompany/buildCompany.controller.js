@@ -5,6 +5,7 @@ import { CompanySetup } from '../../models/companySetup.model.js'
 export const BuildCompanyController = {
   async fillInfo(req, res) {
     try {
+      const OTHERS_BUSINESS_SECTOR_ID = 11
       const {
         company_id,
         today_focus,
@@ -12,15 +13,20 @@ export const BuildCompanyController = {
         customer_service_channel,
         has_employees,
         is_registered_company,
+        hasStartedActivities,
         marketing_source,
         about,
         business_sector_id,
+        business_sector_other,
         street,
         zip_code,
         region_id,
         phone_number,
       } = req.body
-
+      const sectorId = business_sector_other
+        ? OTHERS_BUSINESS_SECTOR_ID
+        : business_sector_id
+      const sectorOther = business_sector_other || null
       const { id: address_id } = await Address.create(
         street,
         zip_code,
@@ -32,9 +38,11 @@ export const BuildCompanyController = {
         company_id,
         has_employees,
         is_registered_company,
+        hasStartedActivities,
         about,
         address_id,
-        business_sector_id
+        sectorId,
+        sectorOther
       )
 
       today_focus.forEach(async (responseId) => {
@@ -75,6 +83,7 @@ export const BuildCompanyController = {
 
       res.status(201).json({ company_setup_id: id })
     } catch (error) {
+      console.error('error', error)
       res.status(500).json({ error: error.message })
     }
   },

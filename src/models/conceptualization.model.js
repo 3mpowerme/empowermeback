@@ -154,18 +154,20 @@ export const Conceptualization = {
     offering_service_type_id,
     region_id,
     business_sector_id,
+    sectorOther,
     about,
     market_analysis_id
   ) {
     const [result] = await db.query(
       `INSERT INTO conceptualization 
-       (company_id, offering_service_type_id, region_id, business_sector_id, about, market_analysis_id) 
-       VALUES (?,?,?,?,?,?)`,
+       (company_id, offering_service_type_id, region_id, business_sector_id, business_sector_other, about, market_analysis_id) 
+       VALUES (?,?,?,?,?,?,?)`,
       [
         company_id,
         offering_service_type_id,
         region_id,
         business_sector_id,
+        sectorOther,
         about,
         market_analysis_id,
       ]

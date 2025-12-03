@@ -24,7 +24,7 @@ export function getPresignedPutUrl({
 
 export function buildKeyForServiceDoc({
   serviceId,
-  docId,
+  companyId,
   fileName = 'upload.bin',
 }) {
   const base =
@@ -32,5 +32,5 @@ export function buildKeyForServiceDoc({
       .toLowerCase()
       .replace(/[^\w\-\.]+/g, '-')
       .slice(0, 80) || 'upload.bin'
-  return `services/${serviceId}/documents/${docId}-${Date.now()}-${base}`
+  return `services/${serviceId}/documents/${companyId}/${base}-${Date.now()}`
 }

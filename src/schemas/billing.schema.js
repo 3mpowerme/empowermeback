@@ -17,6 +17,14 @@ export const CreatePortalSchema = Joi.object({
 export const CreateServiceOrderSchema = Joi.object({
   companyId: Joi.number().integer().positive().required(),
   serviceCode: Joi.string().min(5).max(50).required(),
+  items: Joi.array()
+    .items(
+      Joi.object({
+        serviceCode: Joi.string().min(3).max(50).required(),
+        quantity: Joi.number().integer().positive().default(1),
+      })
+    )
+    .optional(),
 })
 
 export const CancelSubscriptionSchema = Joi.object({

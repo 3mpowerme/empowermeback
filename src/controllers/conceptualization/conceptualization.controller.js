@@ -24,6 +24,7 @@ import { MARKET_ANALYSIS_JSON_GEMINI_SCHEMA } from '../../templates/marketAnalys
 import { Country } from '../../models/country.model.js'
 import { BUSINESS_PLAN_JSON_OPENAI_SCHEMA } from '../../templates/businessPlan.openai.schema.js'
 import { ANALYSIS_AND_BUSINESS_PLAN_JSON_OPENAI_SCHEMA } from '../../templates/analysisAndBusinessPlan.openai.schema.js'
+import { ANALYSIS_AND_BUSINESS_PLAN_JSON_GEMINI_SCHEMA } from '../../templates/analysisAndBusinessPlan.gemini.schema.js'
 import { BusinessCard } from '../../models/businessCard.model.js'
 import { BusinessCardHistory } from '../../models/businessCardHistory.model.js'
 
@@ -62,8 +63,18 @@ export const ConceptualizationController = {
 
   async create(req, res) {
     try {
-      const { offering_service_type_id, region_id, business_sector_id, about } =
-        req.body
+      const OTHERS_BUSINESS_SECTOR_ID = 11
+      const {
+        offering_service_type_id,
+        region_id,
+        business_sector_id,
+        business_sector_other,
+        about,
+      } = req.body
+      const sectorId = business_sector_other
+        ? OTHERS_BUSINESS_SECTOR_ID
+        : business_sector_id
+      const sectorOther = business_sector_other || null
       console.log('body', req.body)
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
@@ -78,7 +89,9 @@ export const ConceptualizationController = {
       const { name: regionName } = await Region.getById(region_id)
       const prompt = buildMarketAnalysisPrompt(
         offeringServiceTypeName,
-        businessSectorName,
+        sectorId === OTHERS_BUSINESS_SECTOR_ID
+          ? sectorOther
+          : businessSectorName,
         regionName,
         about,
         countryName
@@ -126,7 +139,8 @@ export const ConceptualizationController = {
         companyId,
         offering_service_type_id,
         region_id,
-        business_sector_id,
+        sectorId,
+        sectorOther,
         about,
         marketAnalysisId
       )

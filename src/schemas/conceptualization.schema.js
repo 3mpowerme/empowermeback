@@ -8,5 +8,6 @@ export const conceptualizationSchema = Joi.object({
     .required(),
   about: Joi.string().min(10).max(500).required(),
   business_sector_id: Joi.number().integer().positive().required(),
+  business_sector_other: Joi.string().max(150).allow(''),
   region_id: Joi.number().integer().positive().required(),
 })

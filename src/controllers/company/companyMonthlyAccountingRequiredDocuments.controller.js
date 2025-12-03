@@ -1,10 +1,11 @@
 import { Billing } from '../../models/billing.model.js'
 import { Company } from '../../models/company.model.js'
 import { CompanyMonthlyAccountingRequest } from '../../models/companyMonthlyAccountingRequest.model.js'
+import { CompanyMonthlyAccountingRequiredDocuments } from '../../models/companyMonthlyAccountingRequiredDocuments.model.js'
 import { Service } from '../../models/service.model.js'
 import { UserIdentity } from '../../models/userIdentity.model.js'
 
-export const CompanyMonthlyAccountingRequestController = {
+export const CompanyMonthlyAccountingRequiredDocumentsController = {
   async getAll(req, res) {
     try {
       const sub = req.user.sub
@@ -12,19 +13,8 @@ export const CompanyMonthlyAccountingRequestController = {
       const companyResult = await Company.getCompanyIdByUserId(userId)
       const { id: companyId } = companyResult
       const companyMonthlyAccountingRequest =
-        await CompanyMonthlyAccountingRequest.getById(companyId)
-      console.log(
-        'companyMonthlyAccountingRequest',
-        companyMonthlyAccountingRequest
-      )
-      const companyCommercialMovements =
-        await CompanyMonthlyAccountingRequest.getCommercialMovementsById(
-          companyId
-        )
-      console.log('companyCommercialMovements', companyCommercialMovements)
-      if (companyMonthlyAccountingRequest)
-        companyMonthlyAccountingRequest.commercial_movements =
-          companyCommercialMovements?.movement_id
+        await CompanyMonthlyAccountingRequiredDocuments.getById(companyId)
+
       res.json(companyMonthlyAccountingRequest || {})
     } catch (error) {
       res.status(500).json({ error: error.message })
@@ -34,42 +24,30 @@ export const CompanyMonthlyAccountingRequestController = {
   async create(req, res) {
     try {
       const {
-        email,
-        company_contact_phone,
-        legal_representative_name,
+        company_rut,
+        company_statute_or_constitution,
+        proof_of_address,
         legal_representative_rut,
-        legal_representative_phone,
-        need_startup_support,
-        commercial_movements,
+        legal_representative_key,
+        activities,
       } = req.body
+
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
       const { companyId } = req.params
       const service = await Service.getByCode('accounting')
       console.log('service: ', service)
 
-      await CompanyMonthlyAccountingRequest.create(
-        companyId,
-        email,
-        company_contact_phone,
-        legal_representative_name,
-        legal_representative_rut,
-        legal_representative_phone,
-        need_startup_support,
-        commercial_movements,
-        service?.id
-      )
-
-      /*
-      const so = await Billing.createServiceOrder(
+      await CompanyMonthlyAccountingRequiredDocuments.create(
         companyId,
         service?.id,
-        service?.default_amount_cents,
-        service?.default_currency,
-        userId
+        company_rut,
+        company_statute_or_constitution,
+        proof_of_address,
+        legal_representative_rut,
+        legal_representative_key,
+        activities
       )
-        */
-
       res.status(201).json({ message: 'success' })
     } catch (error) {
       res.status(500).json({ error: error.message })
@@ -77,6 +55,7 @@ export const CompanyMonthlyAccountingRequestController = {
   },
   async update(req, res) {
     try {
+      // TODO
       const { need_startup_support, commercial_movements } = req.body
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)

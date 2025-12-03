@@ -9,17 +9,52 @@ export const BillingController = {
     try {
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
-      const { companyId, serviceCode } = req.body
+      const { companyId, serviceCode, items = [] } = req.body
       const service = await Service.getByCode(serviceCode)
-      console.log('service: ', service)
+
+      if (!service) {
+        return res.status(404).json({ error: 'Service not found' })
+      }
+
+      if (Array.isArray(items) && items.length) {
+        const normalizedItems = []
+
+        for (const item of items) {
+          const addonService = await Service.getByCode(item.serviceCode)
+          if (!addonService) {
+            return res
+              .status(400)
+              .json({ error: `Invalid addon serviceCode: ${item.serviceCode}` })
+          }
+          const quantity = Number(item.quantity) || 1
+          normalizedItems.push({
+            serviceId: addonService.id,
+            name: addonService.name,
+            quantity,
+            unitAmountCents: addonService.default_amount_cents,
+          })
+        }
+
+        const so = await Billing.createServiceOrderWithItems(
+          companyId,
+          service.id,
+          service.default_amount_cents,
+          service.default_currency,
+          normalizedItems,
+          userId
+        )
+
+        return res.json({ serviceOrderId: so.id })
+      }
+
       const so = await Billing.createServiceOrder(
         companyId,
-        service?.id,
-        service?.default_amount_cents,
-        service?.default_currency,
+        service.id,
+        service.default_amount_cents,
+        service.default_currency,
         userId
       )
-      console.log('service order: ', so)
+
       res.json({ serviceOrderId: so.id })
     } catch (err) {
       console.error(err)

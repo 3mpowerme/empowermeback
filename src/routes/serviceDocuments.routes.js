@@ -14,7 +14,7 @@ router.put(
 )
 
 router.post(
-  '/:serviceId/documents/:id/upload-url',
+  '/:serviceId/documents/:companyId/upload-url',
   ServiceDocumentController.getUploadUrl
 )
 

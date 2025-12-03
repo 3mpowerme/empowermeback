@@ -392,3 +392,11 @@ Política de inferencia de locale/moneda:
 9) Responde ÚNICAMENTE con JSON minificado (una sola línea) que pase el schema.
 `.trim()
 }
+
+export function buildPromptToInferOptions(descripcion, options = []) {
+  return `A partir de la siguiente descripción del negocio: ${descripcion} 
+  Y de esta lista de opciones posibles de actividades económicas:
+  ${options.join(',')}
+  Devuélveme únicamente las actividades económicas que correspondan a este negocio
+  `
+}

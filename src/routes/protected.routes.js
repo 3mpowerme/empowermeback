@@ -4,6 +4,7 @@ import companyRoutes from '../routes/company.routes.js'
 import accountRoutes from '../routes/account.routes.js'
 import userFeatureRoutes from '../routes/userFeature.routes.js'
 import companyMonthlyAccountingRequestRoutes from './companyMonthlyAccountingRequest.routes.js'
+import companyMonthlyAccountingRequiredDocumentsRoutes from './companyMonthlyAccountingRequiredDocuments.routes.js'
 import companyAuditInfoRoutes from '../routes/companyAuditInfo.routes.js'
 import companyBalanceInfoRoutes from '../routes/companyBalanceInfo.routes.js'
 import companyShareholderRoutes from '../routes/companyShareholder.routes.js'
@@ -24,6 +25,12 @@ import billingRoutes from './billing.routes.js'
 import planRoutes from './plan.routes.js'
 import serviceDocumentsRoutes from './serviceDocuments.routes.js'
 import protectedBuildCompanyRoutes from './protectedBuildCompany.routes.js'
+import iaRoutes from './ia.routes.js'
+import monthlyAccountingRoutes from './monthlyAccounting.routes.js'
+import auditProcessIntakeRoutes from './auditProcessIntake.routes.js'
+import balancePreparationIntakeRoutes from './balancePreparationIntake.routes.js'
+import companyNotificationRoutes from './companyNotification.routes.js'
+import companyDocumentRoutes from './companyDocument.routes.js'
 
 const router = Router()
 
@@ -43,8 +50,10 @@ router.use(
   '/company-monthly-accounting-request',
   companyMonthlyAccountingRequestRoutes
 )
-router.use('/company-audit-request', companyAuditInfoRoutes)
-router.use('/company-balance-request', companyBalanceInfoRoutes)
+router.use(
+  '/company-monthly-accounting-required-documents',
+  companyMonthlyAccountingRequiredDocumentsRoutes
+)
 router.use('/company-shareholder', companyShareholderRoutes)
 router.use(
   '/company-shareholders-registry-request',
@@ -72,5 +81,14 @@ router.use('/subscription', subscriptionRoutes)
 router.use('/plan', planRoutes)
 router.use('/services', serviceDocumentsRoutes)
 router.use('/build-company', protectedBuildCompanyRoutes)
+router.use('/ia', iaRoutes)
+
+// invoices and accounting
+router.use('/monthly-accounting', monthlyAccountingRoutes)
+router.use('/company-audit-request', auditProcessIntakeRoutes)
+router.use('/company-balance-request', balancePreparationIntakeRoutes)
+
+router.use('/company-notifications', companyNotificationRoutes)
+router.use('/company-documents', companyDocumentRoutes)
 
 export default router
