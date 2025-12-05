@@ -770,6 +770,8 @@ export const ANALYSIS_AND_BUSINESS_PLAN_JSON_OPENAI_SCHEMA = {
             'margen_esperado',
             'roi_anual_estimado_%',
             'riesgos_financieros',
+            'capital_trabajo_estimado',
+            'escenarios_burn_rate_mensual',
           ],
           properties: {
             inversion_inicial: {
@@ -797,10 +799,11 @@ export const ANALYSIS_AND_BUSINESS_PLAN_JSON_OPENAI_SCHEMA = {
               items: {
                 type: 'object',
                 additionalProperties: false,
-                required: ['concepto', 'amount'],
+                required: ['concepto', 'amount', 'descripcion_costo_fijo'],
                 properties: {
                   concepto: { type: 'string' },
                   amount: { type: 'number', minimum: 0 },
+                  descripcion_costo_fijo: { type: 'string' },
                 },
               },
             },
@@ -851,6 +854,60 @@ export const ANALYSIS_AND_BUSINESS_PLAN_JSON_OPENAI_SCHEMA = {
             },
             'roi_anual_estimado_%': { type: 'number', minimum: 0 },
             riesgos_financieros: { type: 'array', items: { type: 'string' } },
+            capital_trabajo_estimado: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['monto_recomendado', 'meses_cobertura', 'comentario'],
+              properties: {
+                monto_recomendado: {
+                  type: 'number',
+                  minimum: 0,
+                  description:
+                    'Capital de trabajo recomendado para cubrir el burn rate',
+                },
+                meses_cobertura: {
+                  type: 'number',
+                  minimum: 0,
+                  description:
+                    'Número estimado de meses que cubre el capital de trabajo',
+                },
+                comentario: {
+                  type: 'string',
+                  description:
+                    'Explicación breve de cómo se calculó el capital de trabajo',
+                },
+              },
+            },
+            escenarios_burn_rate_mensual: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: [
+                  'nombre',
+                  'descripcion',
+                  'gastos_mensuales',
+                  'meses_cobertura_con_capital_trabajo',
+                ],
+                properties: {
+                  nombre: {
+                    type: 'string',
+                    description: 'Ejemplo: Conservador, Moderado, Agresivo',
+                  },
+                  descripcion: { type: 'string' },
+                  gastos_mensuales: {
+                    type: 'number',
+                    minimum: 0,
+                  },
+                  meses_cobertura_con_capital_trabajo: {
+                    type: 'number',
+                    minimum: 0,
+                    description:
+                      'Meses que puede operar con este escenario usando el capital de trabajo estimado',
+                  },
+                },
+              },
+            },
           },
         },
         plan_implementacion: {
