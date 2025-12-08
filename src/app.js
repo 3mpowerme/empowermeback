@@ -12,7 +12,7 @@ const allowedOrigins = [
   'https://d2v6ypobvyostd.cloudfront.net',
   'https://d2vbl2764n2th6.cloudfront.net',
   'http://empowerme-app-dev.s3-website-us-east-1.amazonaws.com',
-  'https://app.empowermedev.com/'
+  'https://app.empowermedev.com'
 ]
 
 // Webhooks first to use raw body
