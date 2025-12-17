@@ -5,6 +5,7 @@ import companyOfferingRoutes from './companyOffering.routes.js'
 import customerServiceChannelRoutes from './customerServiceChannel.routes.js'
 import marketingSourceRoutes from './marketingSource.routes.js'
 import regionRoutes from './region.routes.js'
+import countryRoutes from './countries.routes.js'
 import featureRoutes from './feature.routes.js'
 import publicBuildCompanyRoutes from './publicBuildCompany.routes.js'
 import commercialMovementRoutes from './commercialMovement.routes.js'
@@ -22,6 +23,7 @@ router.use('/company-offering', companyOfferingRoutes)
 router.use('/customer-service-channel', customerServiceChannelRoutes)
 router.use('/marketing-source', marketingSourceRoutes)
 router.use('/region', regionRoutes)
+router.use('/country', countryRoutes)
 router.use('/feature', featureRoutes)
 router.use('/build-company', publicBuildCompanyRoutes)
 router.use('/auth', authRoutes)

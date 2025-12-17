@@ -22,6 +22,14 @@ export const AccountController = {
       const companies = await UserIdentity.getUserAndCompaniesInfoByUserId(
         userAndCompanyInfo?.userId
       )
+      for (let i = 0; i < companies.length; i++) {
+        const companySetup = await Account.getCompanySetupByCompanyId(
+          companies[i].companyId
+        )
+        console.log('companySetup', companySetup)
+        companies[i].info = companySetup
+      }
+      console.log('companies', companies)
       res.json({ ...userAndCompanyInfo, companies })
     } catch (error) {
       res.status(500).json({ error: error.message })

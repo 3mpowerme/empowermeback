@@ -31,6 +31,12 @@ import auditProcessIntakeRoutes from './auditProcessIntake.routes.js'
 import balancePreparationIntakeRoutes from './balancePreparationIntake.routes.js'
 import companyNotificationRoutes from './companyNotification.routes.js'
 import companyDocumentRoutes from './companyDocument.routes.js'
+import companyRegisteredServicesRoutes from './companyRegisteredServies.routes.js'
+import dissolutionCompanyIntakeRoutes from './dissolutionCompanyIntake.routes.js'
+import shareholderRegistryIntakeRoutes from './shareholderRegistry.routes.js'
+import constitutionReviewIntakeRoutes from './constitutionReviewIntake.routes.js'
+import virtualOfficeIntakeRoutes from './virtualOfficeIntake.routes.js'
+import ordinaryShareholdersMeetingIntakeRoutes from './ordinaryShareholdersMeetingIntake.routes.js'
 
 const router = Router()
 
@@ -87,8 +93,18 @@ router.use('/ia', iaRoutes)
 router.use('/monthly-accounting', monthlyAccountingRoutes)
 router.use('/company-audit-request', auditProcessIntakeRoutes)
 router.use('/company-balance-request', balancePreparationIntakeRoutes)
+// legal services
+router.use('/dissolution-request', dissolutionCompanyIntakeRoutes)
+router.use('/shareholders-registry-request', shareholderRegistryIntakeRoutes)
+router.use('/constitution-review-request', constitutionReviewIntakeRoutes)
+router.use('/virtual-office-request', virtualOfficeIntakeRoutes)
+router.use(
+  '/ordinary_shareholders_meeting-request',
+  ordinaryShareholdersMeetingIntakeRoutes
+)
 
 router.use('/company-notifications', companyNotificationRoutes)
 router.use('/company-documents', companyDocumentRoutes)
+router.use('/company-registered-services', companyRegisteredServicesRoutes)
 
 export default router

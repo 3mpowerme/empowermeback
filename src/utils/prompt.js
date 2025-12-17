@@ -397,6 +397,6 @@ export function buildPromptToInferOptions(descripcion, options = []) {
   return `A partir de la siguiente descripción del negocio: ${descripcion} 
   Y de esta lista de opciones posibles de actividades económicas:
   ${options.join(',')}
-  Devuélveme únicamente las actividades económicas que correspondan a este negocio
+  Devuélveme únicamente las actividades económicas que correspondan a este negocio, tambien admite poder buscar por code separado por comas
   `
 }

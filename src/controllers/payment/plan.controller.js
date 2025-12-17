@@ -19,7 +19,9 @@ export const PlanController = {
   async getPlansByServiceCode(req, res) {
     try {
       const { service_code } = req.params
+      console.log('service_code', service_code)
       const rows = await Plan.getPlansByServiceCode(service_code)
+      console.log('rows', rows)
       res.json(rows)
     } catch (err) {
       console.error(err)

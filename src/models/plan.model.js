@@ -54,9 +54,17 @@ export const Plan = {
 
   async getPlansByServiceCode(service_code) {
     const [rows] = await db.query(
-      `SELECT p.id, p.code, p.name, p.description, p.currency, p.how_often, p.interval_count, p.amount_cents FROM plans as p, services as s WHERE p.is_active = 1 AND p.service_id=s.id and s.code = ?`,
+      `SELECT p.id, p.code, p.name, p.description, p.includes, p.currency, p.how_often, p.interval_count, p.amount_cents 
+     FROM plans as p, services as s 
+     WHERE p.is_active = 1 AND p.service_id = s.id AND s.code = ?`,
       [service_code]
     )
-    return rows
+
+    const parsed = rows.map((r) => ({
+      ...r,
+      includes: r.includes ? JSON.parse(r.includes) : [],
+    }))
+
+    return parsed
   },
 }

@@ -2,11 +2,20 @@ import db from '../config/db.js'
 
 export const Account = {
   async getCompanySetupByCompanyId(companyId) {
-    const [result] = await db.query(
-      'SELECT * from company_setup where company_id=?',
-      [companyId]
-    )
-    return result[0]
+    try {
+      const [result] = await db.query(
+        'SELECT * from company_setup where company_id=?',
+        [companyId]
+      )
+      const [result2] = await db.query(
+        'SELECT t.name as today_focus from today_focus_responses tr, today_focus t where tr.today_focus_id=t.id and company_id=? ',
+        [companyId]
+      )
+      console.log('result2', result2)
+      return { ...result[0], ...result2[0] }
+    } catch (error) {
+      console.error('getCompanySetupByCompanyId error', error)
+    }
   },
   async update(fields, companyId) {
     const keys = Object.keys(fields)

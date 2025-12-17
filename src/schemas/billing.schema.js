@@ -25,6 +25,7 @@ export const CreateServiceOrderSchema = Joi.object({
       })
     )
     .optional(),
+  count: Joi.number(),
 })
 
 export const CancelSubscriptionSchema = Joi.object({

@@ -69,12 +69,27 @@ export const Billing = {
     return row || null
   },
 
+  async getServiceOrderByServiceCode(serviceCode) {
+    const [row] = await db.query(
+      `
+      SELECT
+        so.*,
+        s.code AS service_code
+      FROM service_orders so
+      JOIN services s ON s.id = so.service_id
+      WHERE s.code = ? AND so.status = 'paid' LIMIT 1`,
+      [serviceCode]
+    )
+    return row
+  },
+
   async createServiceOrder(
     companyId,
     serviceId,
     amountCents,
     currency,
     requestedByUserId = null,
+    count = 1,
     title = null,
     description = null
   ) {
@@ -86,9 +101,9 @@ export const Billing = {
     const [result] = await db.query(
       `
       INSERT INTO service_orders
-        (company_id, requested_by_user_id, service_id, title, description, currency, amount_cents, status)
+        (company_id, requested_by_user_id, service_id, title, description, currency, amount_cents, status, count)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, 'pending_payment')
+        (?, ?, ?, ?, ?, ?, ?, 'pending_payment', ?)
       `,
       [
         companyId,
@@ -98,6 +113,7 @@ export const Billing = {
         description,
         String(currency).toUpperCase(),
         amountCents,
+        count,
       ]
     )
 

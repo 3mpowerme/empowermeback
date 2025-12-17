@@ -1,6 +1,7 @@
 import { stripe } from '../../config/stripe.js'
 import { Billing } from '../../models/billing.model.js'
 import { Payment } from '../../models/payment.model.js'
+import { Plan } from '../../models/plan.model.js'
 import { Service } from '../../models/service.model.js'
 import { UserIdentity } from '../../models/userIdentity.model.js'
 
@@ -9,7 +10,7 @@ export const BillingController = {
     try {
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
-      const { companyId, serviceCode, items = [] } = req.body
+      const { companyId, serviceCode, items = [], count = 1 } = req.body
       const service = await Service.getByCode(serviceCode)
 
       if (!service) {
@@ -47,12 +48,15 @@ export const BillingController = {
         return res.json({ serviceOrderId: so.id })
       }
 
+      const plan = await Plan.getPlanByCode(service.code)
+      console.log('plan', plan)
       const so = await Billing.createServiceOrder(
         companyId,
         service.id,
-        service.default_amount_cents,
-        service.default_currency,
-        userId
+        plan.amount_cents * count, // could be more than one item
+        plan.currency,
+        userId,
+        count
       )
 
       res.json({ serviceOrderId: so.id })
