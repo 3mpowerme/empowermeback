@@ -396,7 +396,9 @@ Política de inferencia de locale/moneda:
 export function buildPromptToInferOptions(descripcion, options = []) {
   return `A partir de la siguiente descripción del negocio: ${descripcion} 
   Y de esta lista de opciones posibles de actividades económicas:
-  ${options.join(',')}
-  Devuélveme únicamente las actividades económicas que correspondan a este negocio, tambien admite poder buscar por code separado por comas
+  ${options.map((it) => JSON.stringify(it)).join(',')}
+  Devuélveme únicamente las actividades económicas que correspondan a este negocio, tambien admite poder buscar por code si viene separado por comas, dame las actividades
+  exactas que corresponden a los codigos.
+  Arrojame resultados solamente de la lista de opciones posibles de actividades económicas que te pasé
   `
 }

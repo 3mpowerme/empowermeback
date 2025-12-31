@@ -12,6 +12,12 @@ export const QuestionResponse = {
     return rows[0]
   },
 
+  async getTodayFocusById(todayFocusId) {
+    const sql = `SELECT * FROM today_focus WHERE id = ?`
+    const [rows] = await db.query(sql, [todayFocusId])
+    return rows[0]
+  },
+
   async createByQuestionTable(questionTable, companyId, responseId) {
     const sql = `INSERT INTO ${questionTable}_responses (${questionTable}_id, company_id) VALUES (?, ?)`
     console.log('sql', sql)

@@ -8,6 +8,10 @@ export const Company = {
     )
     return rows[0]
   },
+  async getCompanyById(id) {
+    const [rows] = await db.query('SELECT * FROM companies where id = ?', [id])
+    return rows[0]
+  },
   async getAll(userId) {
     const [rows] = await db.query(
       'SELECT * FROM companies where owner_user_id = ?',

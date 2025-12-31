@@ -89,6 +89,7 @@ export const BillingController = {
         metadata: {
           company_id: String(so.company_id),
           service_order_id: String(so.id),
+          email,
         },
         automatic_payment_methods: { enabled: true },
       })

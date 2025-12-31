@@ -83,6 +83,7 @@ export const SubscriptionsController = {
           company_id: String(companyId),
           plan_id: String(planId),
           service_id: String(plan.service_id),
+          email,
         },
       })
 

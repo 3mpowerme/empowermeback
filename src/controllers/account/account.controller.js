@@ -27,7 +27,8 @@ export const AccountController = {
           companies[i].companyId
         )
         console.log('companySetup', companySetup)
-        companies[i].info = companySetup
+        const address = await Address.get(companySetup?.address_id)
+        companies[i].info = { ...companySetup, ...address }
       }
       console.log('companies', companies)
       res.json({ ...userAndCompanyInfo, companies })

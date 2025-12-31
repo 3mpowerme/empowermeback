@@ -23,6 +23,7 @@ export const BuildCompanyController = {
         region_id,
         phone_number,
       } = req.body
+
       const sectorId = business_sector_other
         ? OTHERS_BUSINESS_SECTOR_ID
         : business_sector_id
@@ -44,15 +45,21 @@ export const BuildCompanyController = {
         sectorId,
         sectorOther
       )
+      let todayFocusResult = null
 
-      today_focus.forEach(async (responseId) => {
+      for (const responseId of today_focus) {
+        const result = await QuestionResponse.getTodayFocusById(responseId)
+        if (result?.name) {
+          todayFocusResult = { todayFocus: result.name }
+        }
         const newRow = await QuestionResponse.createByQuestionTable(
           'today_focus',
           company_id,
           responseId
         )
+
         console.log('today_focus inserted', newRow)
-      })
+      }
 
       company_offering.forEach(async (responseId) => {
         const newRow = await QuestionResponse.createByQuestionTable(
@@ -81,7 +88,38 @@ export const BuildCompanyController = {
         console.log('marketing_source inserted', newRow)
       })
 
-      res.status(201).json({ company_setup_id: id })
+      let featureId = 1 // Home by default
+      let todayFocusUrl = '/dashboard' // Home by default
+
+      if (todayFocusResult) {
+        if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
+          featureId = 2
+          todayFocusUrl = '/dashboard/buildCompany'
+        }
+        if (
+          todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')
+        ) {
+          featureId = 3
+          todayFocusUrl = '/dashboard/taxes_and_accounting'
+        }
+
+        if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
+          featureId = 6
+          todayFocusUrl = '/dashboard/business_orientation'
+        }
+
+        if (todayFocusResult?.todayFocus?.includes('Logo')) {
+          featureId = 7
+          todayFocusUrl = '/dashboard/graphic_design/logo_design'
+        }
+      }
+
+      res.status(201).json({
+        company_setup_id: id,
+        todayFocusFeatureId: featureId || 1,
+        todayFocus: todayFocusResult?.todayFocus || 'Home',
+        todayFocusUrl,
+      })
     } catch (error) {
       console.error('error', error)
       res.status(500).json({ error: error.message })

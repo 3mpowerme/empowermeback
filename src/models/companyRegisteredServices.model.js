@@ -89,7 +89,7 @@ export const CompanyRegisteredServices = {
       accounting: accounting_client_intakes_rows.length > 0,
       start_activities:
         company_monthly_accounting_required_documents_rows.length > 0,
-      tax_audit: audit_process_intakes_rows.length > 0,
+      audit: audit_process_intakes_rows.length > 0,
       balance: balance_preparation_intakes_rows.length > 0,
       tax_planning: tax_planning_intakes_rows.length > 0,
       remunerations: false,
@@ -126,7 +126,7 @@ export const CompanyRegisteredServices = {
       accounting: accounting_client_intakes,
       start_activities:
         company_monthly_accounting_required_documents_rows.length > 0,
-      tax_audit: audit_process_intakes_rows.length > 0,
+      audit: audit_process_intakes_rows.length > 0,
       balance: balance_preparation_intakes_rows.length > 0,
       tax_planning: tax_planning_intakes_rows.length > 0,
       remunerations: remunerations_intakes_rows.length > 0,
@@ -165,6 +165,16 @@ export const CompanyRegisteredServices = {
       [companyId]
     )
 
+    const [company_modifications_spa_rows] = await db.query(
+      'SELECT * FROM company_modifications_intakes  where company_id = ? and service_id=19',
+      [companyId]
+    )
+
+    const [company_modifications_srl_rows] = await db.query(
+      'SELECT * FROM company_modifications_intakes  where company_id = ? and service_id=20',
+      [companyId]
+    )
+
     const personalized_advisory_intakes_rows =
       await Billing.getServiceOrderByServiceCode('personalized_advisory')
 
@@ -177,6 +187,8 @@ export const CompanyRegisteredServices = {
       personalized_advisory: personalized_advisory_intakes_rows.length > 0,
       ordinary_shareholders_meeting:
         ordinary_shareholders_meeting_rows.length > 0,
+      company_modifications_spa: company_modifications_spa_rows.length > 0,
+      company_modifications_srl: company_modifications_srl_rows.length > 0,
     }
   },
 
@@ -199,6 +211,10 @@ export const CompanyRegisteredServices = {
       await Billing.getServiceOrderByServiceCode(
         'ordinary_shareholders_meeting'
       )
+    const company_modifications_spa_intakes_rows =
+      await Billing.getServiceOrderByServiceCode('company_modifications_spa')
+    const company_modifications_srl_intakes_rows =
+      await Billing.getServiceOrderByServiceCode('company_modifications_srl')
 
     return {
       dissolution_of_srl: dissolution_of_srl_company_intakes_rows.length > 0,
@@ -210,6 +226,10 @@ export const CompanyRegisteredServices = {
       personalized_advisory: personalized_advisory_intakes_rows.length > 0,
       ordinary_shareholders_meeting:
         ordinary_shareholders_meeting_intakes_rows.length > 0,
+      company_modifications_spa:
+        company_modifications_spa_intakes_rows.length > 0,
+      company_modifications_srl:
+        company_modifications_srl_intakes_rows.length > 0,
     }
   },
 

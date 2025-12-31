@@ -25,9 +25,9 @@ export const CompanyMonthlyAccountingRequestController = {
       if (companyMonthlyAccountingRequest)
         companyMonthlyAccountingRequest.commercial_movements =
           companyCommercialMovements?.movement_id
-      res.json(companyMonthlyAccountingRequest || {})
+      return res.json(companyMonthlyAccountingRequest || {})
     } catch (error) {
-      res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: error.message })
     }
   },
 

@@ -17,9 +17,9 @@ export const StartActivitiesController = {
       if (companyMonthlyAccountingRequest)
         companyMonthlyAccountingRequest.commercial_movements =
           companyCommercialMovements?.movement_id
-      res.json(companyMonthlyAccountingRequest || {})
-      const rows = await AccountingClientIntakeModel.getAll()
-      return res.json(rows)
+      return res.json(companyMonthlyAccountingRequest || {})
+      //const rows = await AccountingClientIntakeModel.getAll()
+      //return res.json(rows)
     } catch (error) {
       return res.status(500).json({ message: 'Internal server error' })
     }

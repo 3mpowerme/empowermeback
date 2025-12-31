@@ -3,6 +3,12 @@ import { saveWebhookEventOnce } from '../../utils/payments.js'
 import { Subscription } from '../../models/subscription.model.js'
 import { Payment } from '../../models/payment.model.js'
 import { Billing } from '../../models/billing.model.js'
+import { send } from '../../services/email/index.js'
+import { paymentSuccessTemplate } from '../../services/email/templates/paymentSuccessTemplate.js'
+import { subscriptionCreatedTemplate } from '../../services/email/templates/subscriptionCreatedTemplate.js'
+import { Service } from '../../models/service.model.js'
+import { Plan } from '../../models/plan.model.js'
+import { Company } from '../../models/company.model.js'
 
 export const WebhookController = {
   async handle(req, res) {
@@ -49,6 +55,11 @@ export const WebhookController = {
               Number(pi.metadata.service_order_id)
             )
           }
+          console.log('pi.metadata?.email', pi.metadata?.email)
+          await send({
+            to: 'mariano@empowerme.global' || pi.metadata?.email,
+            ...paymentSuccessTemplate({ paymentIntent: pi }),
+          })
 
           break
         }
@@ -104,6 +115,38 @@ export const WebhookController = {
         case 'customer.subscription.updated': {
           const stripeSub = event.data.object
           await Subscription.upsertSubscriptionFromStripe(stripeSub)
+          const status = String(stripeSub?.status || '')
+          const cancellation_reason = stripeSub?.cancellation_details?.reason
+          if (status !== 'incomplete') {
+            const companyId = stripeSub?.metadata?.company_id
+              ? String(stripeSub.metadata.company_id)
+              : ''
+            const serviceId = stripeSub?.metadata?.service_id
+              ? String(stripeSub.metadata.service_id)
+              : ''
+            const planId = stripeSub?.metadata?.plan_id
+              ? String(stripeSub.metadata.plan_id)
+              : ''
+            const plan = await Plan.getPlanById(planId)
+            const servie = await Service.getServiceById(serviceId)
+            const company = await Company.getCompanyById(companyId)
+
+            const serviceName = servie?.name,
+              planName = plan?.name,
+              companyName = company?.name
+
+            await send({
+              to: 'mariano@empowerme.global' || stripeSub.metadata?.email,
+              ...subscriptionCreatedTemplate({
+                subscription: stripeSub,
+                serviceName,
+                planName,
+                companyName,
+                isCancelled: cancellation_reason === 'cancellation_requested',
+              }),
+            })
+          }
+
           break
         }
 
@@ -111,6 +154,31 @@ export const WebhookController = {
           const stripeSub = event.data.object
 
           await Subscription.markCanceledByExternalId(stripeSub.id)
+          const companyId = stripeSub?.metadata?.company_id
+            ? String(stripeSub.metadata.company_id)
+            : ''
+          const serviceId = stripeSub?.metadata?.service_id
+            ? String(stripeSub.metadata.service_id)
+            : ''
+          const planId = stripeSub?.metadata?.plan_id
+            ? String(stripeSub.metadata.plan_id)
+            : ''
+          const plan = await Plan.getPlanById(planId)
+          const servie = await Service.getServiceById(serviceId)
+          const company = await Company.getCompanyById(companyId)
+          const serviceName = servie?.name,
+            planName = plan?.name,
+            companyName = company?.name
+          await send({
+            to: 'mariano@empowerme.global' || stripeSub.metadata?.email,
+            ...subscriptionCreatedTemplate({
+              subscription: stripeSub,
+              serviceName,
+              planName,
+              companyName,
+              isCancelled: true,
+            }),
+          })
           break
         }
 

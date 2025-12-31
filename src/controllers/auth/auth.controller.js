@@ -1,4 +1,3 @@
-import db from '../../config/db.js'
 import { Company } from '../../models/company.model.js'
 import { Country } from '../../models/country.model.js'
 import { User } from '../../models/user.model.js'
@@ -11,7 +10,6 @@ import {
   logout,
   refreshTokens,
 } from '../../services/cognito.service.js'
-import { getCognitoSub } from '../../utils/cognito.js'
 import jwt from 'jsonwebtoken'
 import { getKey, validateAccessToken } from '../../utils/jwtValidator.js'
 import { UserIdentity } from '../../models/userIdentity.model.js'
@@ -173,18 +171,55 @@ export async function googleController(req, res) {
       const { id } = await User.create(email, countryId)
       userId = id
     }
-    console.log('userId', userId)
     await UserIdentity.upsertUser(userId, 'GOOGLE', sub)
     if (!company && companyName) {
-      const { id: companyId } = await Company.create(userId, companyName)
+      const { companyId } = await Company.create(userId, companyName)
+      await UserFeature.create(userId, 1) // Home
+      await UserFeature.create(userId, 2) // Conceptualizacion
+      await UserFeature.create(userId, 3) // Creacion de Empresa
+      await UserFeature.create(userId, 4) // Facturacion y Contabilidad
+      await UserFeature.create(userId, 5) // Servicios Legales
+      await UserFeature.create(userId, 6) // Gestion empresarial
+      await UserFeature.create(userId, 7) // Diseño grafico empresarial
       company = { companyId, companyName }
     }
-    console.log('company', company)
     let featureId = 1 // Home by default
+    let todayFocusUrl = '/dashboard' // Home by default
+    let todayFocusResult
+
+    todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(
+      company.companyId
+    )
+    console.log('todayFocusResult', todayFocusResult)
+
+    if (todayFocusResult) {
+      if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
+        featureId = 2
+        todayFocusUrl = '/dashboard/buildCompany'
+      }
+      if (todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')) {
+        featureId = 3
+        todayFocusUrl = '/dashboard/taxes_and_accounting'
+      }
+
+      if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
+        featureId = 6
+        todayFocusUrl = '/dashboard/business_orientation'
+      }
+
+      if (todayFocusResult?.todayFocus?.includes('Logo')) {
+        featureId = 7
+        todayFocusUrl = '/dashboard/graphic_design/logo_design'
+      }
+    }
+
     return res.json({
       message: user ? 'Login success' : 'User registered',
       companyId: company?.companyId,
-      featureId,
+      todayFocusFeatureId: featureId || 1,
+      todayFocus: todayFocusResult?.todayFocus || 'Home',
+      todayFocusUrl,
+      userId,
     })
   } catch (error) {
     res.status(401).json({ error: error.message })

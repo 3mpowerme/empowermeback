@@ -27,6 +27,7 @@ import serviceDocumentsRoutes from './serviceDocuments.routes.js'
 import protectedBuildCompanyRoutes from './protectedBuildCompany.routes.js'
 import iaRoutes from './ia.routes.js'
 import monthlyAccountingRoutes from './monthlyAccounting.routes.js'
+import startActivitiesRoutes from './startActivities.routes.js'
 import auditProcessIntakeRoutes from './auditProcessIntake.routes.js'
 import balancePreparationIntakeRoutes from './balancePreparationIntake.routes.js'
 import companyNotificationRoutes from './companyNotification.routes.js'
@@ -37,6 +38,8 @@ import shareholderRegistryIntakeRoutes from './shareholderRegistry.routes.js'
 import constitutionReviewIntakeRoutes from './constitutionReviewIntake.routes.js'
 import virtualOfficeIntakeRoutes from './virtualOfficeIntake.routes.js'
 import ordinaryShareholdersMeetingIntakeRoutes from './ordinaryShareholdersMeetingIntake.routes.js'
+import companyModificationsIntakeRoutes from './companyModificationsIntake.routes.js'
+import purchaseSaleIntakeRoutes from './purchaseSaleIntake.routes.js'
 
 const router = Router()
 
@@ -91,6 +94,7 @@ router.use('/ia', iaRoutes)
 
 // invoices and accounting
 router.use('/monthly-accounting', monthlyAccountingRoutes)
+router.use('/company-start-activities-request', startActivitiesRoutes)
 router.use('/company-audit-request', auditProcessIntakeRoutes)
 router.use('/company-balance-request', balancePreparationIntakeRoutes)
 // legal services
@@ -102,6 +106,8 @@ router.use(
   '/ordinary_shareholders_meeting-request',
   ordinaryShareholdersMeetingIntakeRoutes
 )
+router.use('/company-modifications-request', companyModificationsIntakeRoutes)
+router.use('/purchase-sale-request', purchaseSaleIntakeRoutes)
 
 router.use('/company-notifications', companyNotificationRoutes)
 router.use('/company-documents', companyDocumentRoutes)
