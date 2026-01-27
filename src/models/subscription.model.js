@@ -58,7 +58,7 @@ export const Subscription = {
     currentPeriodStart,
     currentPeriodEnd,
   }) {
-    await db.query(
+    const [result] = await db.query(
       `INSERT INTO subscriptions (
          company_id,
          plan_id,
@@ -88,13 +88,17 @@ export const Subscription = {
         cancelAtPeriodEnd ? 1 : 0,
       ]
     )
+    return result.insertId
   },
 
   async upsertSubscriptionFromStripe(sub) {
     console.log('upsertSubscriptionFromStripe sub', sub)
     console.log('sub.current_period_start', sub.current_period_start)
     console.log('sub.current_period_end', sub.current_period_end)
-    await db.query(
+    console.log('sub status', sub.status)
+    console.log('sub metadata', sub.metadata)
+
+    const [result] = await db.query(
       `INSERT INTO subscriptions (
          company_id,
          plan_id,
@@ -129,6 +133,15 @@ export const Subscription = {
         sub.cancel_at_period_end ? 1 : 0,
       ]
     )
+    if (sub.status === 'active') {
+      console.log('update service_orders')
+      await db.query(
+        `UPDATE service_orders set payment_status = 'paid' where subscription_id = ?`,
+        [result.insertId]
+      )
+    }
+
+    return result.insertId
   },
 
   async markPastDueByExternalId(externalSubscriptionId) {

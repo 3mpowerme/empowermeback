@@ -1,5 +1,17 @@
 import Joi from 'joi'
 
+export const phoneSchema = Joi.object({
+  countryCode: Joi.string().length(2).uppercase().required(),
+
+  phone_code: Joi.string()
+    .pattern(/^\+\d{1,3}$/)
+    .required(),
+
+  phone: Joi.string()
+    .pattern(/^\d{7,11}$/)
+    .required(),
+})
+
 export const createVirtualOfficeContractIntakeSchema = Joi.object({
   company_name: Joi.string().max(255).required(),
   company_tax_id: Joi.string().max(20).required(),
@@ -18,5 +30,5 @@ export const createVirtualOfficeContractIntakeSchema = Joi.object({
     .valid('SOLTER@', 'CASAD@', 'SEPARAD@', 'VIUD@', 'CONVIVIENTE CIVIL')
     .required(),
   legal_representative_email: Joi.string().email().max(255).required(),
-  legal_representative_phone: Joi.string().max(50).required(),
+  legal_representative_phone: phoneSchema.allow(null),
 })

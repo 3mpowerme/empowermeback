@@ -102,28 +102,35 @@ export const CompanyRegisteredServices = {
     const service = await Service.getByCode('accounting')
     console.log('service', service)
     const accounting_client_intakes =
-      await Subscription.hasActiveSubscriptionForService(companyId, service.id)
+      await Billing.getServiceOrderByServiceCode('accounting', companyId)
+    //const accounting_client_intakes =
+    //await Subscription.hasActiveSubscriptionForService(companyId, service.id)
     console.log('accounting_client_intakes', accounting_client_intakes)
     const audit_process_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('audit')
+      await Billing.getServiceOrderByServiceCode('audit', companyId)
     const balance_preparation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('balance')
+      await Billing.getServiceOrderByServiceCode('balance', companyId)
+    console.log(
+      'balance_preparation_intakes_rows',
+      balance_preparation_intakes_rows
+    )
     const tax_planning_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('tax_planning')
+      await Billing.getServiceOrderByServiceCode('tax_planning', companyId)
     const remunerations_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('remunerations')
+      await Billing.getServiceOrderByServiceCode('remunerations', companyId)
     const virtual_office_contract_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('virtual_office')
+      await Billing.getServiceOrderByServiceCode('virtual_office', companyId)
     const virtual_office_plus_ministorage_contract_intakes_rows =
       await Billing.getServiceOrderByServiceCode(
-        'virtual_office_plus_ministorage'
+        'virtual_office_plus_ministorage',
+        companyId
       )
     const [company_monthly_accounting_required_documents_rows] = await db.query(
       'SELECT * FROM company_monthly_accounting_required_documents where company_id = ?',
       [companyId]
     )
     return {
-      accounting: accounting_client_intakes,
+      accounting: accounting_client_intakes.length > 0,
       start_activities:
         company_monthly_accounting_required_documents_rows.length > 0,
       audit: audit_process_intakes_rows.length > 0,
@@ -176,7 +183,10 @@ export const CompanyRegisteredServices = {
     )
 
     const personalized_advisory_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('personalized_advisory')
+      await Billing.getServiceOrderByServiceCode(
+        'personalized_advisory',
+        companyId
+      )
 
     return {
       dissolution_of_srl: dissolution_of_srl_company_intakes_rows.length > 0,
@@ -194,27 +204,55 @@ export const CompanyRegisteredServices = {
 
   async getPaidServicesForLegalServices(companyId) {
     const dissolution_of_srl_company_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('dissolution_of_srl')
+      await Billing.getServiceOrderByServiceCode(
+        'dissolution_of_srl',
+        companyId
+      )
     const dissolution_of_eirl_company_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('dissolution_of_eirl')
+      await Billing.getServiceOrderByServiceCode(
+        'dissolution_of_eirl',
+        companyId
+      )
     const dissolution_of_spa_company_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('dissolution_of_spa')
+      await Billing.getServiceOrderByServiceCode(
+        'dissolution_of_spa',
+        companyId
+      )
     const constitution_review_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('constitution_review')
+      await Billing.getServiceOrderByServiceCode(
+        'constitution_review',
+        companyId
+      )
     const shareholders_registry_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('shareholders_registry')
+      await Billing.getServiceOrderByServiceCode(
+        'shareholders_registry',
+        companyId
+      )
     const business_orientation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('business_orientation')
+      await Billing.getServiceOrderByServiceCode(
+        'business_orientation',
+        companyId
+      )
     const personalized_advisory_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('personalized_advisory')
+      await Billing.getServiceOrderByServiceCode(
+        'personalized_advisory',
+        companyId
+      )
     const ordinary_shareholders_meeting_intakes_rows =
       await Billing.getServiceOrderByServiceCode(
-        'ordinary_shareholders_meeting'
+        'ordinary_shareholders_meeting',
+        companyId
       )
     const company_modifications_spa_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('company_modifications_spa')
+      await Billing.getServiceOrderByServiceCode(
+        'company_modifications_spa',
+        companyId
+      )
     const company_modifications_srl_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('company_modifications_srl')
+      await Billing.getServiceOrderByServiceCode(
+        'company_modifications_srl',
+        companyId
+      )
 
     return {
       dissolution_of_srl: dissolution_of_srl_company_intakes_rows.length > 0,
@@ -233,9 +271,9 @@ export const CompanyRegisteredServices = {
     }
   },
 
-  async getRegisteredServicesForBuildCompany() {
+  async getRegisteredServicesForBuildCompany(companyId) {
     const business_creation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('business_creation')
+      await Billing.getServiceOrderByServiceCode('business_creation', companyId)
     return {
       business_creation: business_creation_intakes_rows.length > 0,
     }
@@ -243,7 +281,7 @@ export const CompanyRegisteredServices = {
 
   async getPaidServicesForBuildCompany(companyId) {
     const business_creation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('business_creation')
+      await Billing.getServiceOrderByServiceCode('business_creation', companyId)
     return {
       business_creation: business_creation_intakes_rows.length > 0,
     }
@@ -274,9 +312,9 @@ export const CompanyRegisteredServices = {
       await Subscription.hasActiveSubscriptionForService(companyId, service.id)
     console.log('accounting_client_intakes', accounting_client_intakes)
     const business_creation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('business_creation')
+      await Billing.getServiceOrderByServiceCode('business_creation', companyId)
     const balance_preparation_intakes_rows =
-      await Billing.getServiceOrderByServiceCode('balance')
+      await Billing.getServiceOrderByServiceCode('balance', companyId)
 
     return {
       accounting: accounting_client_intakes,

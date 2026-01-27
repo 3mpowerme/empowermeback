@@ -8,6 +8,22 @@ const PASSWORD_FIELDS = [
   'legal_representative_sii_password',
 ]
 
+function normalizePayload(data) {
+  const payload = { ...data }
+
+  if (payload.contact_person_phone !== undefined) {
+    if (payload.contact_person_phone === null) {
+      payload.contact_person_phone = null
+    } else {
+      payload.contact_person_phone = JSON.stringify(
+        payload.contact_person_phone || {}
+      )
+    }
+  }
+
+  return payload
+}
+
 async function hashPasswordFields(payload) {
   const result = { ...payload }
   for (const field of PASSWORD_FIELDS) {
@@ -42,7 +58,7 @@ export const AuditProcessIntakeModel = {
   },
 
   async create(data) {
-    const payload = await hashPasswordFields(data)
+    const payload = await hashPasswordFields(normalizePayload(data))
     const keys = Object.keys(payload).filter(
       (key) => payload[key] !== undefined
     )

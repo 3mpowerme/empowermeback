@@ -20,6 +20,32 @@ async function hashPasswordFields(payload) {
   return result
 }
 
+function normalizePayload(data) {
+  const payload = { ...data }
+
+  if (payload.company_contact_phone !== undefined) {
+    if (payload.company_contact_phone === null) {
+      payload.company_contact_phone = null
+    } else {
+      payload.company_contact_phone = JSON.stringify(
+        payload.company_contact_phone || {}
+      )
+    }
+  }
+
+  if (payload.legal_representative_phone !== undefined) {
+    if (payload.legal_representative_phone === null) {
+      payload.legal_representative_phone = null
+    } else {
+      payload.legal_representative_phone = JSON.stringify(
+        payload.legal_representative_phone || {}
+      )
+    }
+  }
+
+  return payload
+}
+
 export const AccountingClientIntakeModel = {
   async getAll() {
     const [rows] = await pool.query(
@@ -74,7 +100,8 @@ export const AccountingClientIntakeModel = {
      * Commercial movements insert end
      */
 
-    const payload = await hashPasswordFields(data)
+    const payload = await hashPasswordFields(normalizePayload(data))
+
     const keys = Object.keys(payload).filter(
       (key) => payload[key] !== undefined
     )

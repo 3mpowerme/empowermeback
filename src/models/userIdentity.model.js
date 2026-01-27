@@ -45,15 +45,16 @@ export const UserIdentity = {
 
   async getUserAndUserIdentityByEmail(email) {
     const [rows] = await db.query(
-      'SELECT * FROM users as u, user_identities as ui WHERE u.email = ? AND u.id = ui.user_id',
+      'SELECT * FROM users as u, user_identities as ui, user_roles as ur WHERE u.email = ? AND u.id = ui.user_id AND ur.user_id = u.id',
       [email]
     )
+
     return rows[0]
   },
 
   async getUserIdBySub(sub) {
     const [rows] = await db.query(
-      'SELECT u.id as userId FROM users as u, user_identities as ui WHERE ui.provider_sub = ? AND u.id = ui.user_id',
+      'SELECT u.id as userId, ur.role_id as type FROM users as u, user_identities as ui, user_roles as ur WHERE ui.provider_sub = ? AND u.id = ui.user_id AND ur.user_id=u.id',
       [sub]
     )
     return rows[0]

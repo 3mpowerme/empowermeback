@@ -1,5 +1,17 @@
 import Joi from 'joi'
 
+export const phoneSchema = Joi.object({
+  countryCode: Joi.string().length(2).uppercase().required(),
+
+  phone_code: Joi.string()
+    .pattern(/^\+\d{1,3}$/)
+    .required(),
+
+  phone: Joi.string()
+    .pattern(/^\d{7,11}$/)
+    .required(),
+})
+
 export const buildCompanySchema = Joi.object({
   company_id: Joi.number().integer().positive().required(),
   today_focus: Joi.array()
@@ -27,7 +39,5 @@ export const buildCompanySchema = Joi.object({
   street: Joi.string().min(1).max(100).required(),
   zip_code: Joi.string().min(5).max(7).required(),
   region_id: Joi.number().integer().positive().required(),
-  phone_number: Joi.string()
-    .pattern(/^[0-9]{7,15}$/)
-    .required(),
+  phone_number: phoneSchema.required(),
 })

@@ -51,8 +51,9 @@ export async function loginController(req, res) {
     let todayFocusUrl = '/dashboard' // Home by default
     let todayFocusResult
     if (sub) {
-      const { userId } = await UserIdentity.getUserIdBySub(sub)
+      const { userId, type } = await UserIdentity.getUserIdBySub(sub)
       result.userId = userId
+      result.type = type
       const companyResult = await Company.getCompanyIdByUserId(userId)
       const { id: companyId } = companyResult
       todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(companyId)
@@ -81,6 +82,11 @@ export async function loginController(req, res) {
         }
       }
     }
+    if (result.type == 2) {
+      featureId = 10
+      todayFocusUrl = '/dashboard/panel'
+    }
+
     res.json({
       ...result,
       todayFocusFeatureId: featureId || 1,
@@ -161,17 +167,21 @@ export async function googleController(req, res) {
     const user = await UserIdentity.getUserAndUserIdentityByEmail(email)
     console.log('user', user)
     let userId
+    let type
     let company = null
     const { id: countryId } = await Country.getByCode(countryCode)
     if (user) {
       // user already exists
       userId = user.user_id
+      type = user.role_id
       company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
     } else {
       const { id } = await User.create(email, countryId)
       userId = id
     }
     await UserIdentity.upsertUser(userId, 'GOOGLE', sub)
+    console.log('companyName', companyName)
+    console.log('company', company)
     if (!company && companyName) {
       const { companyId } = await Company.create(userId, companyName)
       await UserFeature.create(userId, 1) // Home
@@ -182,14 +192,27 @@ export async function googleController(req, res) {
       await UserFeature.create(userId, 6) // Gestion empresarial
       await UserFeature.create(userId, 7) // Diseño grafico empresarial
       company = { companyId, companyName }
+    } else {
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 1))) {
+        console.log('assiging home')
+        await UserFeature.create(userId, 1) // Home
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 2))) {
+        console.log('assiging Conceptualizacion')
+        await UserFeature.create(userId, 2) // Conceptualizacion
+      }
     }
     let featureId = 1 // Home by default
     let todayFocusUrl = '/dashboard' // Home by default
     let todayFocusResult
 
-    todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(
-      company.companyId
-    )
+    console.log('lets todayFocusResult')
+    if (company) {
+      todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(
+        company.companyId
+      )
+    }
+
     console.log('todayFocusResult', todayFocusResult)
 
     if (todayFocusResult) {
@@ -213,6 +236,11 @@ export async function googleController(req, res) {
       }
     }
 
+    if (type == 2) {
+      featureId = 10
+      todayFocusUrl = '/dashboard/panel'
+    }
+
     return res.json({
       message: user ? 'Login success' : 'User registered',
       companyId: company?.companyId,
@@ -220,6 +248,7 @@ export async function googleController(req, res) {
       todayFocus: todayFocusResult?.todayFocus || 'Home',
       todayFocusUrl,
       userId,
+      type,
     })
   } catch (error) {
     res.status(401).json({ error: error.message })

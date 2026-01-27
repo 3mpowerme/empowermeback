@@ -1,5 +1,17 @@
 import Joi from 'joi'
 
+export const phoneSchema = Joi.object({
+  countryCode: Joi.string().length(2).uppercase().required(),
+
+  phone_code: Joi.string()
+    .pattern(/^\+\d{1,3}$/)
+    .required(),
+
+  phone: Joi.string()
+    .pattern(/^\d{7,11}$/)
+    .required(),
+})
+
 const legalRepresentativeSchema = Joi.object({
   tax_id: Joi.string().max(20).allow(null, ''),
   unique_key: Joi.string().max(50).allow(null, ''),
@@ -10,7 +22,7 @@ const shareholderSchema = Joi.object({
   tax_id: Joi.string().max(20).allow(null, ''),
   address_region_commune: Joi.string().max(255).allow(null, ''),
   profession: Joi.string().max(100).allow(null, ''),
-  phone: Joi.string().max(50).allow(null, ''),
+  phone: phoneSchema.allow(null),
 })
 
 export const createShareholderRegistryIntakeSchema = Joi.object({
@@ -21,6 +33,6 @@ export const createShareholderRegistryIntakeSchema = Joi.object({
     .items(legalRepresentativeSchema)
     .allow(null),
   contact_person_name: Joi.string().max(255).allow(null, ''),
-  contact_person_phone: Joi.string().max(50).allow(null, ''),
+  contact_person_phone: phoneSchema.allow(null),
   contact_person_email: Joi.string().email().max(255).allow(null, ''),
 })

@@ -69,7 +69,7 @@ export const Billing = {
     return row || null
   },
 
-  async getServiceOrderByServiceCode(serviceCode) {
+  async getServiceOrderByServiceCode(serviceCode, companyId) {
     const [row] = await db.query(
       `
       SELECT
@@ -77,8 +77,8 @@ export const Billing = {
         s.code AS service_code
       FROM service_orders so
       JOIN services s ON s.id = so.service_id
-      WHERE s.code = ? AND so.status = 'paid' LIMIT 1`,
-      [serviceCode]
+      WHERE s.code = ? AND so.payment_status = 'paid' AND company_id=? LIMIT 1`,
+      [serviceCode, companyId]
     )
     return row
   },
@@ -90,30 +90,28 @@ export const Billing = {
     currency,
     requestedByUserId = null,
     count = 1,
-    title = null,
-    description = null
+    subscriptionId = null,
+    billingType = 'one_off'
   ) {
     if (!companyId || !serviceId)
       throw new Error('companyId and serviceId are required')
-    if (!amountCents || !currency)
-      throw new Error('amountCents and currency are required')
 
     const [result] = await db.query(
       `
       INSERT INTO service_orders
-        (company_id, requested_by_user_id, service_id, title, description, currency, amount_cents, status, count)
+        (company_id, requested_by_user_id, service_id, currency, amount_cents, payment_status, count, subscription_id, billing_type)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, 'pending_payment', ?)
+        (?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?)
       `,
       [
         companyId,
         requestedByUserId,
         serviceId,
-        title,
-        description,
-        String(currency).toUpperCase(),
+        currency ? String(currency).toUpperCase() : null,
         amountCents,
         count,
+        subscriptionId,
+        billingType,
       ]
     )
 
@@ -141,9 +139,7 @@ export const Billing = {
     baseAmountCents,
     currency,
     items = [],
-    requestedByUserId = null,
-    title = null,
-    description = null
+    requestedByUserId = null
   ) {
     if (!companyId || !serviceId)
       throw new Error('companyId and serviceId are required')
@@ -177,7 +173,7 @@ export const Billing = {
     const [result] = await db.query(
       `
       INSERT INTO service_orders
-        (company_id, requested_by_user_id, service_id, title, description, currency, amount_cents, status)
+        (company_id, requested_by_user_id, service_id, currency, amount_cents, payment_status)
       VALUES
         (?, ?, ?, ?, ?, ?, ?, 'pending_payment')
       `,
@@ -185,8 +181,6 @@ export const Billing = {
         companyId,
         requestedByUserId,
         serviceId,
-        title,
-        description,
         normalizedCurrency,
         totalAmountCents,
       ]
@@ -240,8 +234,9 @@ export const Billing = {
   },
 
   async markServiceOrderPaid(serviceOrderId) {
-    await db.query(`UPDATE service_orders SET status = 'paid' WHERE id = ?`, [
-      serviceOrderId,
-    ])
+    await db.query(
+      `UPDATE service_orders SET payment_status = 'paid' WHERE id = ?`,
+      [serviceOrderId]
+    )
   },
 }

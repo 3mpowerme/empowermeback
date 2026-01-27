@@ -1,3 +1,4 @@
+import db from '../config/db.js'
 import { CompanyDocument } from '../models/companyDocument.model.js'
 import { DocumentComment } from '../models/documentComment.model.js'
 import { Service } from '../models/service.model.js'
@@ -46,7 +47,7 @@ export const CompanyDocumentController = {
 
   async upload(req, res) {
     try {
-      const { serviceCode } = req.params
+      const { serviceCode, isExecutive } = req.params
       const companyId = Number(req.params.companyId)
 
       const service = await Service.getByCode(serviceCode)
@@ -83,6 +84,24 @@ export const CompanyDocumentController = {
         size_bytes: req.file.size || null,
         uploaded_by_user_id: userId,
       })
+
+      /**
+       * Notification Part
+       */
+      await db.query(
+        ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
+VALUES (
+  ?,
+  'Nuevo documento disponible',
+  'Tienes un nuevo documento en tu repositorio, da clic para verlo',
+  'info',
+  JSON_OBJECT(
+    'type', 'document',
+    'documentId', ${created.id}
+  )
+)`,
+        [companyId]
+      )
 
       res.status(201).json({
         document: {
@@ -171,7 +190,7 @@ export const CompanyDocumentController = {
     try {
       const companyId = Number(req.params.companyId)
       const documentId = Number(req.params.fileId || req.params.documentId)
-      const { comment } = req.body
+      const { comment, isExecutive } = req.body
 
       const document = await CompanyDocument.getById(documentId, companyId)
       if (!document) {
@@ -186,6 +205,24 @@ export const CompanyDocumentController = {
         companyId,
         userId,
         comment
+      )
+      /**
+       * Notification Part
+       */
+      await db.query(
+        ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
+VALUES (
+  ?,
+  'Nuevo comentario en documento',
+  'Tienes un nuevo comentario, da clic para verlo',
+  'info',
+  JSON_OBJECT(
+    'type', 'comment',
+    'documentId', ${documentId},
+    'commentId', ${created.id}
+  )
+)`,
+        [companyId]
       )
 
       res.status(201).json({ comment: created })

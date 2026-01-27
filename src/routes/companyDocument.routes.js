@@ -13,7 +13,7 @@ const upload = multer({
 
 router.get('/:companyId/:serviceCode', CompanyDocumentController.list)
 router.post(
-  '/:companyId/:serviceCode',
+  '/:companyId/:serviceCode/:isExecutive',
   upload.single('file'),
   CompanyDocumentController.upload
 )

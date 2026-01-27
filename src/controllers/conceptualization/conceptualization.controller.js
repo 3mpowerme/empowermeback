@@ -39,9 +39,11 @@ export const ConceptualizationController = {
     try {
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
-      const companyResult = await Company.getCompanyIdByUserId(userId)
+      // fetch by userId not companyId
+      /*const companyResult = await Company.getCompanyIdByUserId(userId)
       const { id: companyId } = companyResult
-      const row = await Conceptualization.getAllByCompanyId(companyId)
+      */
+      const row = await Conceptualization.getAllByUserId(userId)
       if (!row)
         return res.status(404).json({ message: 'Conceptualizacion not found' })
       res.json(row)
@@ -80,8 +82,11 @@ export const ConceptualizationController = {
       const { userId } = await UserIdentity.getUserIdBySub(sub)
       const { countryId } = await UserIdentity.getCountryIdBySub(sub)
       const { name: countryName } = await Country.getNameById(countryId)
+      // attaching the conceptualization to userId not companyId
+      /*
       const companyResult = await Company.getCompanyIdByUserId(userId)
       const { id: companyId } = companyResult
+      */
       const { name: offeringServiceTypeName } =
         await OfferingServiceType.getById(offering_service_type_id)
       const { name: businessSectorName } =
@@ -136,7 +141,7 @@ export const ConceptualizationController = {
       )
 
       const conceptualization = await Conceptualization.create(
-        companyId,
+        userId,
         offering_service_type_id,
         region_id,
         sectorId,
@@ -232,8 +237,8 @@ export const ConceptualizationController = {
 
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
-      const companyResult = await Company.getCompanyIdByUserId(userId)
-      const { id: companyId } = companyResult
+      /*const companyResult = await Company.getCompanyIdByUserId(userId)
+      const { id: companyId } = companyResult*/
       const prompt = `
         Diseña un logo minimalista y moderno para una marca llamada "${brand_name}".
         El eslogan es: "${slogan}".

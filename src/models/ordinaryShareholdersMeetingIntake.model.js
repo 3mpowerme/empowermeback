@@ -13,30 +13,45 @@ function normalizePayload(data) {
     }
   }
 
+  if (payload.contact_person_phone !== undefined) {
+    if (payload.contact_person_phone === null) {
+      payload.contact_person_phone = null
+    } else {
+      payload.contact_person_phone = JSON.stringify(
+        payload.contact_person_phone || {}
+      )
+    }
+  }
+
   return payload
 }
 
 export const OrdinaryShareholdersMeetingIntakeModel = {
   async create(data) {
-    const payload = normalizePayload(data)
-    const keys = Object.keys(payload).filter(
-      (key) => payload[key] !== undefined
-    )
+    try {
+      const payload = normalizePayload(data)
+      console.log('payload', payload)
+      const keys = Object.keys(payload).filter(
+        (key) => payload[key] !== undefined
+      )
 
-    if (keys.length === 0) {
-      const [result] = await pool.query(`INSERT INTO ${TABLE} () VALUES ()`)
+      if (keys.length === 0) {
+        const [result] = await pool.query(`INSERT INTO ${TABLE} () VALUES ()`)
+        return { id: result.insertId }
+      }
+
+      const fields = keys.map((k) => `\`${k}\``).join(', ')
+      const placeholders = keys.map(() => '?').join(', ')
+      const values = keys.map((k) => payload[k])
+
+      const [result] = await pool.query(
+        `INSERT INTO ${TABLE} (${fields}) VALUES (${placeholders})`,
+        values
+      )
+
       return { id: result.insertId }
+    } catch (error) {
+      console.log('error', error)
     }
-
-    const fields = keys.map((k) => `\`${k}\``).join(', ')
-    const placeholders = keys.map(() => '?').join(', ')
-    const values = keys.map((k) => payload[k])
-
-    const [result] = await pool.query(
-      `INSERT INTO ${TABLE} (${fields}) VALUES (${placeholders})`,
-      values
-    )
-
-    return { id: result.insertId }
   },
 }

@@ -16,6 +16,9 @@ export const User = {
       'INSERT INTO users (email, country_id) VALUES (?,?)',
       [email, country_id]
     )
+    await db.query('INSERT INTO user_roles(user_id, role_id) values (?, 3)', [
+      result.insertId,
+    ])
     return { id: result.insertId, email, country_id }
   },
 

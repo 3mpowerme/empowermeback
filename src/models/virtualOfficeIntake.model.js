@@ -23,6 +23,16 @@ function normalizePayload(data) {
     }
   }
 
+  if (payload.legal_representative_phone !== undefined) {
+    if (payload.legal_representative_phone === null) {
+      payload.legal_representative_phone = null
+    } else {
+      payload.legal_representative_phone = JSON.stringify(
+        payload.legal_representative_phone || {}
+      )
+    }
+  }
+
   return payload
 }
 

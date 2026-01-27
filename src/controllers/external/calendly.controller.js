@@ -101,6 +101,7 @@ export const CalendlyController = {
           serviceOrderId = tracking.utm_content?.replace(/^so_/, '') || null
         if (!serviceOrderId)
           serviceOrderId = tracking.utm_term?.replace(/^so_/, '') || null
+        console.log('[Calendly Webhook] serviceOrderId', serviceOrderId)
         const email = payload.email
         const name = payload.name
         const scheduled_event = payload.scheduled_event

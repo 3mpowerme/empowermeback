@@ -71,7 +71,9 @@ export const BillingController = {
       const { serviceOrderId } = req.body
       const so = await Billing.getServiceOrder(serviceOrderId)
       if (!so) return res.status(404).json({ error: 'Service order not found' })
-      if (!['pending_payment', 'failed', 'refunded'].includes(so.status))
+      if (
+        !['pending_payment', 'failed', 'refunded'].includes(so.payment_status)
+      )
         return res.status(400).json({ error: 'Service order is not payable' })
 
       const email = await Billing.getCompanyOwnerEmail(so.company_id)

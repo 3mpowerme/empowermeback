@@ -40,6 +40,8 @@ import virtualOfficeIntakeRoutes from './virtualOfficeIntake.routes.js'
 import ordinaryShareholdersMeetingIntakeRoutes from './ordinaryShareholdersMeetingIntake.routes.js'
 import companyModificationsIntakeRoutes from './companyModificationsIntake.routes.js'
 import purchaseSaleIntakeRoutes from './purchaseSaleIntake.routes.js'
+import executiveRoutes from './executive.routes.js'
+import intakesRoutes from './intakes.routes.js'
 
 const router = Router()
 
@@ -101,16 +103,20 @@ router.use('/company-balance-request', balancePreparationIntakeRoutes)
 router.use('/dissolution-request', dissolutionCompanyIntakeRoutes)
 router.use('/shareholders-registry-request', shareholderRegistryIntakeRoutes)
 router.use('/constitution-review-request', constitutionReviewIntakeRoutes)
+// pending virtual-office-request
 router.use('/virtual-office-request', virtualOfficeIntakeRoutes)
 router.use(
   '/ordinary_shareholders_meeting-request',
   ordinaryShareholdersMeetingIntakeRoutes
 )
 router.use('/company-modifications-request', companyModificationsIntakeRoutes)
+// pending purchase-sale-request
 router.use('/purchase-sale-request', purchaseSaleIntakeRoutes)
 
 router.use('/company-notifications', companyNotificationRoutes)
 router.use('/company-documents', companyDocumentRoutes)
 router.use('/company-registered-services', companyRegisteredServicesRoutes)
+router.use('/executive', executiveRoutes)
+router.use('/intakes', intakesRoutes)
 
 export default router

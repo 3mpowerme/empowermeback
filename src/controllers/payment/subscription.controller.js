@@ -3,6 +3,8 @@ import { Subscription } from '../../models/subscription.model.js'
 import { Billing } from '../../models/billing.model.js'
 import { Payment } from '../../models/payment.model.js'
 import db from '../../config/db.js'
+import { Service } from '../../models/service.model.js'
+import { UserIdentity } from '../../models/userIdentity.model.js'
 
 function formatPriceSummary(plan) {
   const amountCents = plan.amount_cents || plan.amountCents || 0
@@ -38,7 +40,9 @@ function formatPriceSummary(plan) {
 export const SubscriptionsController = {
   async create(req, res) {
     try {
-      const { companyId, planId } = req.body
+      const sub = req.user.sub
+      const { userId } = await UserIdentity.getUserIdBySub(sub)
+      const { companyId, planId, serviceCode } = req.body
 
       if (!companyId || !planId) {
         return res.status(400).json({
@@ -67,6 +71,12 @@ export const SubscriptionsController = {
         })
       }
 
+      const service = await Service.getByCode(serviceCode)
+
+      if (!service) {
+        return res.status(404).json({ error: 'Service not found' })
+      }
+
       const email = await Billing.getCompanyOwnerEmail(companyId)
       const customerId = await Billing.getOrCreateStripeCustomerId(
         companyId,
@@ -90,6 +100,31 @@ export const SubscriptionsController = {
       const latestInvoice = subscription.latest_invoice
       const invoicePI = latestInvoice?.payment_intent
 
+      let subscriptionId
+      if (Subscription.upsertLocalSubscriptionDraft) {
+        subscriptionId = await Subscription.upsertLocalSubscriptionDraft({
+          companyId,
+          planId,
+          provider: 'stripe',
+          externalSubscriptionId: subscription.id,
+          status: subscription.status || 'incomplete',
+          cancelAtPeriodEnd: subscription.cancel_at_period_end ? 1 : 0,
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+        })
+      }
+
+      const so = await Billing.createServiceOrder(
+        companyId,
+        service.id,
+        invoicePI.amount,
+        invoicePI.currency.toUpperCase(),
+        userId,
+        1,
+        subscriptionId,
+        'subscription'
+      )
+
       if (invoicePI) {
         await Payment.insertPayment({
           companyId,
@@ -100,20 +135,8 @@ export const SubscriptionsController = {
           status: invoicePI.status || 'pending',
           externalPaymentIntentId: invoicePI.id,
           externalInvoiceId: latestInvoice?.id,
-          externalSubscriptionId: subscription.id,
-        })
-      }
-
-      if (Subscription.upsertLocalSubscriptionDraft) {
-        await Subscription.upsertLocalSubscriptionDraft({
-          companyId,
-          planId,
-          provider: 'stripe',
-          externalSubscriptionId: subscription.id,
-          status: subscription.status || 'incomplete',
-          cancelAtPeriodEnd: subscription.cancel_at_period_end ? 1 : 0,
-          currentPeriodStart: null,
-          currentPeriodEnd: null,
+          subscriptionId: subscriptionId,
+          serviceOrderId: so?.id,
         })
       }
 

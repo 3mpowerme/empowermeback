@@ -72,6 +72,16 @@ export const UserFeature = {
     return rows
   },
 
+  async checkIfFeatureIdExistsInUser(userId, featureId) {
+    const [result] = await db.query(
+      'select * from user_feature where user_id = ? AND feature_id = ?',
+      [userId, featureId]
+    )
+    console.log('userId, featureId', userId, featureId)
+    console.log('checkIfFeatureIdExistsInUser result', result)
+    return result.length > 0
+  },
+
   async create(userId, featureId) {
     const [result] = await db.query(
       'INSERT INTO user_feature (user_id, feature_id) VALUES (?,?)',
