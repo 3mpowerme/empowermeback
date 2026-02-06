@@ -18,7 +18,9 @@ export const createVirtualOfficeContractIntakeSchema = Joi.object({
   company_address: Joi.string().max(255).required(),
   company_commune: Joi.string().max(255).required(),
   company_region: Joi.string().max(255).required(),
-
+  contact_person_name: Joi.string().max(255).allow(null, ''),
+  contact_person_email: Joi.string().email().max(255).allow(null, ''),
+  contact_person_phone: phoneSchema.allow(null),
   legal_representative_name: Joi.string().max(255).required(),
   legal_representative_tax_id: Joi.string().max(20).required(),
   legal_representative_address: Joi.string().max(255).required(),

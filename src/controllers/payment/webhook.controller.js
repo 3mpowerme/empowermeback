@@ -9,6 +9,7 @@ import { subscriptionCreatedTemplate } from '../../services/email/templates/subs
 import { Service } from '../../models/service.model.js'
 import { Plan } from '../../models/plan.model.js'
 import { Company } from '../../models/company.model.js'
+import { autoAssignPaidServiceOrder } from '../../utils/autoAssignPaidServiceOrder.js'
 
 export const WebhookController = {
   async handle(req, res) {
@@ -51,10 +52,12 @@ export const WebhookController = {
           await Payment.updatePaymentStatusByPI(pi.id, 'succeeded')
 
           if (pi.metadata?.service_order_id) {
-            await Billing.markServiceOrderPaid(
-              Number(pi.metadata.service_order_id)
-            )
+            const serviceOrderId = Number(pi.metadata.service_order_id)
+            await Billing.markServiceOrderPaid(serviceOrderId)
+            console.log('autoAssignPaidServiceOrder trigered')
+            await autoAssignPaidServiceOrder({ serviceOrderId })
           }
+
           console.log('pi.metadata?.email', pi.metadata?.email)
           await send({
             to: 'mariano@empowerme.global' || pi.metadata?.email,

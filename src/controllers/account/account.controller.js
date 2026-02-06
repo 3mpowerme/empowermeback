@@ -17,6 +17,7 @@ export const AccountController = {
   async getAll(req, res) {
     try {
       const sub = req.user.sub
+      const { type } = await UserIdentity.getUserIdBySub(sub)
       const userAndCompanyInfo =
         await UserIdentity.getUserAndCompanyInfoBySub(sub)
       const companies = await UserIdentity.getUserAndCompaniesInfoByUserId(
@@ -33,7 +34,7 @@ export const AccountController = {
         }
       }
       console.log('companies', companies)
-      res.json({ ...userAndCompanyInfo, companies })
+      res.json({ ...userAndCompanyInfo, type, companies })
     } catch (error) {
       res.status(500).json({ error: error.message })
     }

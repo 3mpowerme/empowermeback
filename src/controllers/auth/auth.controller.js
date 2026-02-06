@@ -82,9 +82,14 @@ export async function loginController(req, res) {
         }
       }
     }
-    if (result.type == 2) {
+    if (result.type == 1) {
       featureId = 10
       todayFocusUrl = '/dashboard/panel'
+    }
+
+    if (result.type == 2) {
+      featureId = 11
+      todayFocusUrl = '/dashboard/services'
     }
 
     res.json({
@@ -165,25 +170,30 @@ export async function googleController(req, res) {
     const decoded = await verifyJwt(idToken, getKey, {})
     const { sub, email } = decoded
     const user = await UserIdentity.getUserAndUserIdentityByEmail(email)
-    console.log('user', user)
+    console.log('googleController user', user)
     let userId
     let type
     let company = null
     const { id: countryId } = await Country.getByCode(countryCode)
     if (user) {
+      console.log('googleController user already exists', user)
       // user already exists
       userId = user.user_id
       type = user.role_id
       company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
     } else {
-      const { id } = await User.create(email, countryId)
+      console.log('googleController user not exists, creating')
+      const { id, role_id } = await User.create(email, countryId)
       userId = id
+      type = role_id
     }
     await UserIdentity.upsertUser(userId, 'GOOGLE', sub)
-    console.log('companyName', companyName)
-    console.log('company', company)
+    console.log('googleController user type', type)
+    console.log('googleController companyName', companyName)
+    console.log('googleController company', company)
     if (!company && companyName) {
       const { companyId } = await Company.create(userId, companyName)
+      console.log('googleController creating company')
       await UserFeature.create(userId, 1) // Home
       await UserFeature.create(userId, 2) // Conceptualizacion
       await UserFeature.create(userId, 3) // Creacion de Empresa
@@ -193,27 +203,30 @@ export async function googleController(req, res) {
       await UserFeature.create(userId, 7) // Diseño grafico empresarial
       company = { companyId, companyName }
     } else {
-      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 1))) {
-        console.log('assiging home')
-        await UserFeature.create(userId, 1) // Home
-      }
-      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 2))) {
-        console.log('assiging Conceptualizacion')
-        await UserFeature.create(userId, 2) // Conceptualizacion
+      if (type === 3) {
+        console.log('googleController checkIfFeatureIdExistsInUser for type 3')
+        if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 1))) {
+          console.log('googleController assiging home')
+          await UserFeature.create(userId, 1) // Home
+        }
+        if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 2))) {
+          console.log('googleController assiging Conceptualizacion')
+          console.log('assiging Conceptualizacion')
+          await UserFeature.create(userId, 2) // Conceptualizacion
+        }
       }
     }
     let featureId = 1 // Home by default
     let todayFocusUrl = '/dashboard' // Home by default
     let todayFocusResult
 
-    console.log('lets todayFocusResult')
     if (company) {
       todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(
         company.companyId
       )
     }
 
-    console.log('todayFocusResult', todayFocusResult)
+    console.log('googleController todayFocusResult from db', todayFocusResult)
 
     if (todayFocusResult) {
       if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
@@ -236,9 +249,14 @@ export async function googleController(req, res) {
       }
     }
 
-    if (type == 2) {
+    if (type == 1) {
       featureId = 10
       todayFocusUrl = '/dashboard/panel'
+    }
+
+    if (type == 2) {
+      featureId = 11
+      todayFocusUrl = '/dashboard/services'
     }
 
     return res.json({

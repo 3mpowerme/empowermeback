@@ -13,6 +13,7 @@ export const Billing = {
   },
 
   async getOrCreateStripeCustomerId(companyId, email, stripe) {
+    // TODO support case when no company_id when a user without company pays conceptualization we should add user_id on billing_customers
     const [[bc]] = await db.query(
       `
       SELECT *
@@ -93,8 +94,7 @@ export const Billing = {
     subscriptionId = null,
     billingType = 'one_off'
   ) {
-    if (!companyId || !serviceId)
-      throw new Error('companyId and serviceId are required')
+    if (!serviceId) throw new Error('serviceId are required')
 
     const [result] = await db.query(
       `

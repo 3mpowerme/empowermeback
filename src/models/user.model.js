@@ -12,14 +12,16 @@ export const User = {
   },
 
   async create(email, country_id) {
+    const defaultRoleId = 3
     const [result] = await db.query(
       'INSERT INTO users (email, country_id) VALUES (?,?)',
       [email, country_id]
     )
-    await db.query('INSERT INTO user_roles(user_id, role_id) values (?, 3)', [
+    await db.query('INSERT INTO user_roles(user_id, role_id) values (?, ?)', [
       result.insertId,
+      defaultRoleId,
     ])
-    return { id: result.insertId, email, country_id }
+    return { id: result.insertId, email, country_id, role_id: defaultRoleId }
   },
 
   async remove(id) {
