@@ -500,7 +500,7 @@ export const ConceptualizationController = {
 
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
-      const { id: companyId } = await Company.getCompanyIdByUserId(userId)
+      console.log('userId', userId)
 
       const { countryId } = await UserIdentity.getCountryIdBySub(sub)
       const { name: countryName } = await Country.getNameById(countryId)
@@ -662,11 +662,10 @@ Todos los textos deben de estar en español
           'base64'
         )
 
-        const frontFileNameSafe =
-          `business_card_front_company_${companyId}`.replace(
-            /[^a-zA-Z0-9-_]+/g,
-            '_'
-          )
+        const frontFileNameSafe = `business_card_front_user_${userId}`.replace(
+          /[^a-zA-Z0-9-_]+/g,
+          '_'
+        )
         const frontFileKey = `business_cards/${frontFileNameSafe}_${Date.now()}_${i + 1}_front.png`
 
         const frontS3 = await s3
@@ -697,11 +696,10 @@ Todos los textos deben de estar en español
 
         const backBuffer = Buffer.from(backImageResp.data[0].b64_json, 'base64')
 
-        const backFileNameSafe =
-          `business_card_back_company_${companyId}`.replace(
-            /[^a-zA-Z0-9-_]+/g,
-            '_'
-          )
+        const backFileNameSafe = `business_card_back_user_${userId}`.replace(
+          /[^a-zA-Z0-9-_]+/g,
+          '_'
+        )
         const backFileKey = `business_cards/${backFileNameSafe}_${Date.now()}_${i + 1}_back.png`
 
         const backS3 = await s3

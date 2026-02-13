@@ -1,13 +1,16 @@
 import { Address } from '../../models/address.model.js'
 import { QuestionResponse } from '../../models/questionResponse.model.js'
 import { CompanySetup } from '../../models/companySetup.model.js'
+import { UserIdentity } from '../../models/userIdentity.model.js'
+import { Company } from '../../models/company.model.js'
+import { UserFeature } from '../../models/userFeature.model.js'
 
 export const BuildCompanyController = {
   async fillInfo(req, res) {
     try {
       const OTHERS_BUSINESS_SECTOR_ID = 11
       const {
-        company_id,
+        company_name,
         today_focus,
         company_offering,
         customer_service_channel,
@@ -23,6 +26,41 @@ export const BuildCompanyController = {
         region_id,
         phone_number,
       } = req.body
+
+      const sub = req.user.sub
+      const { userId } = await UserIdentity.getUserIdBySub(sub)
+
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 3))) {
+        console.log('googleController assiging creacion de empresa')
+        await UserFeature.create(userId, 3) // Creacion de Empresa
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 4))) {
+        console.log('googleController assiging Facturacion y Contabilidad')
+        await UserFeature.create(userId, 4) // Facturacion y Contabilidad
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 5))) {
+        console.log('googleController assiging  Servicios Legales')
+        await UserFeature.create(userId, 5) // Servicios Legales
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 6))) {
+        console.log('googleController assiging Gestion empresarial')
+        await UserFeature.create(userId, 6) // Gestion empresarial
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 7))) {
+        console.log('googleController assiging Diseño grafico empresarial')
+        await UserFeature.create(userId, 7) // Diseño grafico empresarial
+      }
+
+      const companies =
+        await UserIdentity.getUserAndCompaniesInfoByUserId(userId)
+      const userHasCompany = companies.length > 0
+      let company_id
+      if (userHasCompany) {
+        company_id = companies[0].companyId
+      } else {
+        const { companyId } = await Company.create(userId, company_name)
+        company_id = companyId
+      }
 
       const sectorId = business_sector_other
         ? OTHERS_BUSINESS_SECTOR_ID
@@ -45,13 +83,8 @@ export const BuildCompanyController = {
         sectorId,
         sectorOther
       )
-      let todayFocusResult = null
 
       for (const responseId of today_focus) {
-        const result = await QuestionResponse.getTodayFocusById(responseId)
-        if (result?.name) {
-          todayFocusResult = { todayFocus: result.name }
-        }
         const newRow = await QuestionResponse.createByQuestionTable(
           'today_focus',
           company_id,
@@ -88,37 +121,8 @@ export const BuildCompanyController = {
         console.log('marketing_source inserted', newRow)
       })
 
-      let featureId = 1 // Home by default
-      let todayFocusUrl = '/dashboard' // Home by default
-
-      if (todayFocusResult) {
-        if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
-          featureId = 2
-          todayFocusUrl = '/dashboard/buildCompany'
-        }
-        if (
-          todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')
-        ) {
-          featureId = 3
-          todayFocusUrl = '/dashboard/taxes_and_accounting'
-        }
-
-        if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
-          featureId = 6
-          todayFocusUrl = '/dashboard/business_orientation'
-        }
-
-        if (todayFocusResult?.todayFocus?.includes('Logo')) {
-          featureId = 7
-          todayFocusUrl = '/dashboard/graphic_design/logo_design'
-        }
-      }
-
       res.status(201).json({
         company_setup_id: id,
-        todayFocusFeatureId: featureId || 1,
-        todayFocus: todayFocusResult?.todayFocus || 'Home',
-        todayFocusUrl,
       })
     } catch (error) {
       console.error('error', error)

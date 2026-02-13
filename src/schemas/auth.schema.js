@@ -18,13 +18,14 @@ export const signupSchema = Joi.object({
   password: Joi.string()
     .min(8)
     .max(50)
-    .pattern(new RegExp('^(?=.*[A-Z])(?=.*[0-9]).*$'))
+    .pattern(
+      new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).*$')
+    )
     .required()
     .messages({
       'string.pattern.base':
-        'Password must contain at least one uppercase letter and one number.',
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
     }),
-  companyName: Joi.string().max(150).required(),
   countryCode: Joi.string().length(2).uppercase().required(),
 })
 
@@ -59,7 +60,6 @@ export const verifyEmailSchema = Joi.object({
 
 export const googleSchema = Joi.object({
   idToken: Joi.string().required(),
-  companyName: Joi.string().max(150),
   countryCode: Joi.string().length(2).uppercase(),
 })
 

@@ -22,3 +22,26 @@ export function parseJsonValues(obj) {
     })
   )
 }
+
+export function getPostRedirectUrlByUserType(userType, userHasCompany) {
+  let postLoginRedirect = '/dashboard'
+  if (userType == 1) {
+    // admin
+    postLoginRedirect = '/dashboard/panel'
+  }
+  if (userType == 2) {
+    // executive
+    postLoginRedirect = '/dashboard/services'
+  }
+
+  if (userType == 3 && userHasCompany) {
+    // customer with company
+    postLoginRedirect = '/dashboard/buildCompany'
+  }
+
+  if (userType == 3 && !userHasCompany) {
+    // customer without company
+    postLoginRedirect = '/dashboard/conceptualization'
+  }
+  return postLoginRedirect
+}

@@ -15,7 +15,7 @@ export const Country = {
     const [rows] = await db.query('SELECT * FROM countries WHERE code = ?', [
       code,
     ])
-    return rows[0]
+    return rows?.[0]
   },
 
   async getNameById(id) {

@@ -5,9 +5,9 @@ export const ServicesController = {
   async get(req, res) {
     try {
       const sub = req.user.sub
-      const { type, userId } = await UserIdentity.getUserIdBySub(sub)
+      const { userType, userId } = await UserIdentity.getUserIdBySub(sub)
 
-      const typeNum = Number(type)
+      const typeNum = Number(userType)
       const userIdNum = Number(userId)
 
       if (!Number.isFinite(typeNum)) {

@@ -16,26 +16,26 @@ import { UserIdentity } from '../../models/userIdentity.model.js'
 import { promisify } from 'util'
 import { UserFeature } from '../../models/userFeature.model.js'
 import { TodayFocus } from '../../models/todayFocus.model.js'
+import { getPostRedirectUrlByUserType } from '../../utils/utils.js'
 
 const verifyJwt = promisify(jwt.verify)
 
 export async function signupController(req, res) {
   try {
-    const { email, password, companyName, countryCode } = req.body
+    const { email, password, countryCode } = req.body
     const { sub } = await signUp(email, password)
-    const { id: countryId } = await Country.getByCode(countryCode)
+    const country = await Country.getByCode(countryCode)
+    const countryId = country?.id || 18 // default CL
     const { id: userId } = await User.create(email, countryId)
     await UserIdentity.create(userId, 'COGNITO', sub)
-    const { companyId } = await Company.create(userId, companyName)
     await UserFeature.create(userId, 1) // Home
     await UserFeature.create(userId, 2) // Conceptualizacion
-    await UserFeature.create(userId, 3) // Creacion de Empresa
-    await UserFeature.create(userId, 4) // Facturacion y Contabilidad
-    await UserFeature.create(userId, 5) // Servicios Legales
-    await UserFeature.create(userId, 6) // Gestion empresarial
-    await UserFeature.create(userId, 7) // Diseño grafico empresarial
-    console.log('companyId', companyId)
-    return res.status(201).json({ message: 'User registered', companyId })
+    // await UserFeature.create(userId, 3) // Creacion de Empresa
+    // await UserFeature.create(userId, 4) // Facturacion y Contabilidad
+    // await UserFeature.create(userId, 5) // Servicios Legales
+    // await UserFeature.create(userId, 6) // Gestion empresarial
+    // await UserFeature.create(userId, 7) // Diseño grafico empresarial
+    return res.status(201).json({ message: 'User registered' })
   } catch (error) {
     return res.status(500).json({ error: error.message })
   }
@@ -44,59 +44,33 @@ export async function signupController(req, res) {
 export async function loginController(req, res) {
   try {
     const { email, password } = req.body
-    const result = await login(email, password)
-    const payload = await validateAccessToken(result.accessToken)
-    const sub = payload?.sub
-    let featureId = 1 // Home by default
-    let todayFocusUrl = '/dashboard' // Home by default
-    let todayFocusResult
-    if (sub) {
-      const { userId, type } = await UserIdentity.getUserIdBySub(sub)
-      result.userId = userId
-      result.type = type
-      const companyResult = await Company.getCompanyIdByUserId(userId)
-      const { id: companyId } = companyResult
-      todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(companyId)
-      console.log('todayFocusResult', todayFocusResult)
-
-      if (todayFocusResult) {
-        if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
-          featureId = 2
-          todayFocusUrl = '/dashboard/buildCompany'
-        }
-        if (
-          todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')
-        ) {
-          featureId = 3
-          todayFocusUrl = '/dashboard/taxes_and_accounting'
-        }
-
-        if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
-          featureId = 6
-          todayFocusUrl = '/dashboard/business_orientation'
-        }
-
-        if (todayFocusResult?.todayFocus?.includes('Logo')) {
-          featureId = 7
-          todayFocusUrl = '/dashboard/graphic_design/logo_design'
-        }
-      }
+    const cognitoLoginresult = await login(email, password)
+    const cognitoPayload = await validateAccessToken(
+      cognitoLoginresult.accessToken
+    )
+    const cognitoSub = cognitoPayload?.sub
+    const user = {}
+    if (cognitoSub) {
+      const { userId, userType } = await UserIdentity.getUserIdBySub(cognitoSub)
+      user.userId = userId
+      user.userType = userType
     }
-    if (result.type == 1) {
-      featureId = 10
-      todayFocusUrl = '/dashboard/panel'
+    const company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
+    let userHasCompany = false
+    if (company) {
+      userHasCompany = true
     }
 
-    if (result.type == 2) {
-      featureId = 11
-      todayFocusUrl = '/dashboard/services'
-    }
+    const postLoginRedirect = getPostRedirectUrlByUserType(
+      user.userType,
+      userHasCompany
+    )
 
     res.json({
-      ...result,
-      todayFocusFeatureId: featureId || 1,
-      todayFocus: todayFocusResult?.todayFocus || 'Home',
-      todayFocusUrl,
+      ...cognitoLoginresult,
+      ...user,
+      postLoginRedirect,
+      companyId: company?.companyId,
     })
   } catch (error) {
     console.error('login error', error)
@@ -166,107 +140,64 @@ export async function refreshTokenController(req, res) {
 
 export async function googleController(req, res) {
   try {
-    const { idToken, countryCode, companyName } = req.body
+    const { idToken, countryCode } = req.body
     const decoded = await verifyJwt(idToken, getKey, {})
     const { sub, email } = decoded
     const user = await UserIdentity.getUserAndUserIdentityByEmail(email)
     console.log('googleController user', user)
-    let userId
-    let type
-    let company = null
-    const { id: countryId } = await Country.getByCode(countryCode)
+
+    let userId = null
+    let userType = null
+
+    const country = await Country.getByCode(countryCode)
+    const countryId = country?.id || 18 // default CL
     if (user) {
       console.log('googleController user already exists', user)
       // user already exists
       userId = user.user_id
-      type = user.role_id
-      company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
+      userType = user.role_id
     } else {
       console.log('googleController user not exists, creating')
       const { id, role_id } = await User.create(email, countryId)
       userId = id
-      type = role_id
+      userType = role_id
     }
     await UserIdentity.upsertUser(userId, 'GOOGLE', sub)
-    console.log('googleController user type', type)
-    console.log('googleController companyName', companyName)
-    console.log('googleController company', company)
-    if (!company && companyName) {
-      const { companyId } = await Company.create(userId, companyName)
-      console.log('googleController creating company')
-      await UserFeature.create(userId, 1) // Home
-      await UserFeature.create(userId, 2) // Conceptualizacion
-      await UserFeature.create(userId, 3) // Creacion de Empresa
-      await UserFeature.create(userId, 4) // Facturacion y Contabilidad
-      await UserFeature.create(userId, 5) // Servicios Legales
-      await UserFeature.create(userId, 6) // Gestion empresarial
-      await UserFeature.create(userId, 7) // Diseño grafico empresarial
-      company = { companyId, companyName }
-    } else {
-      if (type === 3) {
-        console.log('googleController checkIfFeatureIdExistsInUser for type 3')
-        if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 1))) {
-          console.log('googleController assiging home')
-          await UserFeature.create(userId, 1) // Home
-        }
-        if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 2))) {
-          console.log('googleController assiging Conceptualizacion')
-          console.log('assiging Conceptualizacion')
-          await UserFeature.create(userId, 2) // Conceptualizacion
-        }
+    console.log('googleController user type', userType)
+
+    if (userType === 3) {
+      console.log('googleController checkIfFeatureIdExistsInUser for type 3')
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 1))) {
+        console.log('googleController assiging home')
+        await UserFeature.create(userId, 1) // Home
+      }
+      if (!(await UserFeature.checkIfFeatureIdExistsInUser(userId, 2))) {
+        console.log('googleController assiging Conceptualizacion')
+        console.log('assiging Conceptualizacion')
+        await UserFeature.create(userId, 2) // Conceptualizacion
       }
     }
-    let featureId = 1 // Home by default
-    let todayFocusUrl = '/dashboard' // Home by default
-    let todayFocusResult
 
+    const company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
+
+    let userHasCompany = false
     if (company) {
-      todayFocusResult = await TodayFocus.getTodayFocusByCompanyId(
-        company.companyId
-      )
+      userHasCompany = true
     }
 
-    console.log('googleController todayFocusResult from db', todayFocusResult)
+    console.log('googleController userHasCompany', userHasCompany)
 
-    if (todayFocusResult) {
-      if (todayFocusResult?.todayFocus?.includes('Crea tu empresa')) {
-        featureId = 2
-        todayFocusUrl = '/dashboard/buildCompany'
-      }
-      if (todayFocusResult?.todayFocus?.includes('Impuestos y Contabilidad')) {
-        featureId = 3
-        todayFocusUrl = '/dashboard/taxes_and_accounting'
-      }
-
-      if (todayFocusResult?.todayFocus?.includes('Orientación Empresarial')) {
-        featureId = 6
-        todayFocusUrl = '/dashboard/business_orientation'
-      }
-
-      if (todayFocusResult?.todayFocus?.includes('Logo')) {
-        featureId = 7
-        todayFocusUrl = '/dashboard/graphic_design/logo_design'
-      }
-    }
-
-    if (type == 1) {
-      featureId = 10
-      todayFocusUrl = '/dashboard/panel'
-    }
-
-    if (type == 2) {
-      featureId = 11
-      todayFocusUrl = '/dashboard/services'
-    }
+    const postLoginRedirect = getPostRedirectUrlByUserType(
+      userType,
+      userHasCompany
+    )
 
     return res.json({
       message: user ? 'Login success' : 'User registered',
-      companyId: company?.companyId,
-      todayFocusFeatureId: featureId || 1,
-      todayFocus: todayFocusResult?.todayFocus || 'Home',
-      todayFocusUrl,
       userId,
-      type,
+      userType,
+      postLoginRedirect,
+      companyId: company?.companyId,
     })
   } catch (error) {
     res.status(401).json({ error: error.message })

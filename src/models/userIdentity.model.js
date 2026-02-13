@@ -32,7 +32,7 @@ export const UserIdentity = {
       'SELECT u.email as email, u.name as name, u.id as userId FROM users as u, user_identities as ui WHERE ui.provider_sub = ? AND u.id = ui.user_id',
       [sub]
     )
-    return rows[0]
+    return rows?.[0]
   },
 
   async getUserAndCompaniesInfoByUserId(userId) {
@@ -54,7 +54,7 @@ export const UserIdentity = {
 
   async getUserIdBySub(sub) {
     const [rows] = await db.query(
-      'SELECT u.id as userId, ur.role_id as type FROM users as u, user_identities as ui, user_roles as ur WHERE ui.provider_sub = ? AND u.id = ui.user_id AND ur.user_id=u.id',
+      'SELECT u.id as userId, ur.role_id as userType FROM users as u, user_identities as ui, user_roles as ur WHERE ui.provider_sub = ? AND u.id = ui.user_id AND ur.user_id=u.id',
       [sub]
     )
     return rows[0]
@@ -73,7 +73,7 @@ export const UserIdentity = {
       'SELECT u.id as userId, c.name as companyName, c.id as companyId FROM users as u, user_identities as ui, companies as c WHERE u.email = ? AND u.id = ui.user_id And u.id = c.owner_user_id',
       [email]
     )
-    return rows[0]
+    return rows?.[0]
   },
 
   async upsertUser(user_id, provider, provider_sub) {

@@ -6,7 +6,7 @@ export const Company = {
       'SELECT id FROM companies where owner_user_id = ?',
       [userId]
     )
-    return rows[0]
+    return rows?.[0]
   },
   async getCompanyById(id) {
     const [rows] = await db.query('SELECT * FROM companies where id = ?', [id])

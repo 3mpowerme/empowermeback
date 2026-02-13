@@ -13,7 +13,7 @@ export const phoneSchema = Joi.object({
 })
 
 export const buildCompanySchema = Joi.object({
-  company_id: Joi.number().integer().positive().required(),
+  company_name: Joi.string().max(150).required(),
   today_focus: Joi.array()
     .items(Joi.number().integer().positive().required())
     .min(1)
