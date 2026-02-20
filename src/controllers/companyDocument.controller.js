@@ -4,6 +4,10 @@ import { DocumentComment } from '../models/documentComment.model.js'
 import { Service } from '../models/service.model.js'
 import { UserIdentity } from '../models/userIdentity.model.js'
 import AWS from 'aws-sdk'
+import {
+  createCompanyNotification,
+  getLastActiveServiceOrderAssigneeUserIdByCompanyAndServiceCode,
+} from '../utils/autoAssignPaidServiceOrder.js'
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -48,6 +52,7 @@ export const CompanyDocumentController = {
   async upload(req, res) {
     try {
       const { serviceCode, isExecutive } = req.params
+      console.log('serviceCode, isExecutive', serviceCode, isExecutive)
       const companyId = Number(req.params.companyId)
 
       const service = await Service.getByCode(serviceCode)
@@ -85,11 +90,9 @@ export const CompanyDocumentController = {
         uploaded_by_user_id: userId,
       })
 
-      /**
-       * Notification Part
-       */
-      await db.query(
-        ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
+      if (isExecutive == 'true') {
+        await db.query(
+          ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
 VALUES (
   ?,
   'Nuevo documento disponible',
@@ -97,11 +100,32 @@ VALUES (
   'info',
   JSON_OBJECT(
     'type', 'document',
-    'documentId', ${created.id}
+    'documentId', ${created.id},
+    'serviceCode', '${serviceCode}'
   )
 )`,
-        [companyId]
-      )
+          [companyId]
+        )
+      } else {
+        const userId =
+          await getLastActiveServiceOrderAssigneeUserIdByCompanyAndServiceCode({
+            companyId,
+            serviceCode,
+          })
+        await createCompanyNotification({
+          userId,
+          title: 'Nuevo documento disponible',
+          message: 'El usuario subio un nuevo documento',
+          type: 'info',
+          metadata: {
+            type: 'document',
+            documentId: created.id,
+            serviceCode,
+            companyId,
+            isRepository: true,
+          },
+        })
+      }
 
       res.status(201).json({
         document: {
@@ -190,7 +214,7 @@ VALUES (
     try {
       const companyId = Number(req.params.companyId)
       const documentId = Number(req.params.fileId || req.params.documentId)
-      const { comment, isExecutive } = req.body
+      const { comment, isExecutive, serviceCode } = req.body
 
       const document = await CompanyDocument.getById(documentId, companyId)
       if (!document) {
@@ -206,11 +230,10 @@ VALUES (
         userId,
         comment
       )
-      /**
-       * Notification Part
-       */
-      await db.query(
-        ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
+      console.log('isExecutive', isExecutive)
+      if (isExecutive == true) {
+        await db.query(
+          ` INSERT INTO company_notifications (company_id, title, message, type, metadata)
 VALUES (
   ?,
   'Nuevo comentario en documento',
@@ -219,11 +242,33 @@ VALUES (
   JSON_OBJECT(
     'type', 'comment',
     'documentId', ${documentId},
-    'commentId', ${created.id}
+    'commentId', ${created.id},
+    'serviceCode', '${serviceCode}'
   )
 )`,
-        [companyId]
-      )
+          [companyId]
+        )
+      } else {
+        const userId =
+          await getLastActiveServiceOrderAssigneeUserIdByCompanyAndServiceCode({
+            companyId,
+            serviceCode,
+          })
+        await createCompanyNotification({
+          userId,
+          title: 'Nuevo comentario en documento',
+          message: 'El usuario hizo un nuevo comentario, da clic para verlo',
+          type: 'info',
+          metadata: {
+            type: 'comment',
+            documentId: documentId,
+            commentId: created.id,
+            serviceCode,
+            companyId,
+            isRepository: true,
+          },
+        })
+      }
 
       res.status(201).json({ comment: created })
     } catch (err) {

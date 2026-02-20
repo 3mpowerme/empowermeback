@@ -64,27 +64,87 @@ export class CompanyNotification {
     })
   }
 
-  static async markAsRead(id, companyId) {
-    try {
-      const [result] = await pool.query(
-        `UPDATE company_notifications
-       SET is_read = 1, read_at = NOW()
-       WHERE id = ? AND company_id = ?`,
-        [id, companyId]
-      )
-      return result.affectedRows > 0
-    } catch (error) {
-      console.error(error)
-    }
+  static async findByUser(id, onlyUnread = false, limit = 50, offset = 0) {
+    let query = `
+      SELECT *
+      FROM company_notifications
+      WHERE user_id = ?
+    `
+    const params = [id]
+
+    if (onlyUnread) query += ' AND is_read = 0'
+
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    params.push(limit, offset)
+
+    const [rows] = await pool.query(query, params)
+    return rows.map((r) => {
+      console.log('r.metadata', r.metadata)
+      console.log('typeof ', typeof r.metadata)
+      return {
+        ...r,
+        metadata:
+          typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata,
+      }
+    })
   }
 
-  static async markAllAsRead(companyId) {
+  static async markAsRead({ id, userId = null, companyId = null }) {
+    if (!id) throw new Error('id is required')
+    if (!userId && !companyId)
+      throw new Error('userId or companyId is required')
+    if (userId && companyId)
+      throw new Error('provide only one: userId or companyId')
+
+    const conditions = ['id = ?']
+    const values = [id]
+
+    if (userId) {
+      conditions.push('user_id = ?')
+      values.push(userId)
+    }
+
+    if (companyId) {
+      conditions.push('company_id = ?')
+      values.push(companyId)
+    }
+
     const [result] = await pool.query(
       `UPDATE company_notifications
-       SET is_read = 1, read_at = NOW()
-       WHERE company_id = ? AND is_read = 0`,
-      [companyId]
+     SET is_read = 1, read_at = NOW()
+     WHERE ${conditions.join(' AND ')}`,
+      values
     )
+
+    return result.affectedRows > 0
+  }
+
+  static async markAllAsRead({ userId = null, companyId = null }) {
+    if (!userId && !companyId)
+      throw new Error('userId or companyId is required')
+    if (userId && companyId)
+      throw new Error('provide only one: userId or companyId')
+
+    const conditions = ['is_read = 0']
+    const values = []
+
+    if (userId) {
+      conditions.push('user_id = ?')
+      values.push(userId)
+    }
+
+    if (companyId) {
+      conditions.push('company_id = ?')
+      values.push(companyId)
+    }
+
+    const [result] = await pool.query(
+      `UPDATE company_notifications
+     SET is_read = 1, read_at = NOW()
+     WHERE ${conditions.join(' AND ')}`,
+      values
+    )
+
     return result.affectedRows
   }
 }

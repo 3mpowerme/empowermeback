@@ -9,7 +9,10 @@ import { subscriptionCreatedTemplate } from '../../services/email/templates/subs
 import { Service } from '../../models/service.model.js'
 import { Plan } from '../../models/plan.model.js'
 import { Company } from '../../models/company.model.js'
-import { autoAssignPaidServiceOrder } from '../../utils/autoAssignPaidServiceOrder.js'
+import {
+  autoAssignPaidServiceOrder,
+  getActiveSubscriptionAndLastServiceOrderByEmail,
+} from '../../utils/autoAssignPaidServiceOrder.js'
 
 export const WebhookController = {
   async handle(req, res) {
@@ -92,6 +95,18 @@ export const WebhookController = {
             )
             console.log('stripeSub', stripeSub)
             await Subscription.upsertSubscriptionFromStripe(stripeSub)
+            const metadata = stripeSub?.metadata
+            if (metadata?.email) {
+              const { lastServiceOrder } =
+                await getActiveSubscriptionAndLastServiceOrderByEmail(
+                  metadata.email
+                )
+              console.log('lastServiceOrder', lastServiceOrder)
+              console.log('autoAssignPaidServiceOrder triggered')
+              await autoAssignPaidServiceOrder({
+                serviceOrderId: lastServiceOrder?.id,
+              })
+            }
           }
 
           break
@@ -114,12 +129,27 @@ export const WebhookController = {
           break
         }
 
+        case 'invoice.paid': {
+          const invoice = event.data.object
+          console.log('invoice', invoice)
+          if (invoice.billing_reason === 'subscription_cycle') {
+            // it's automatic payment
+            console.log('automatic payment (recurrent)')
+          }
+          if (invoice.billing_reason === 'subscription_create') {
+            console.log('first payment')
+          }
+        }
+
         case 'customer.subscription.created':
         case 'customer.subscription.updated': {
+          console.log('subscription.created o updated', event.type)
           const stripeSub = event.data.object
           await Subscription.upsertSubscriptionFromStripe(stripeSub)
           const status = String(stripeSub?.status || '')
+          console.log('status', status)
           const cancellation_reason = stripeSub?.cancellation_details?.reason
+          console.log('cancellation_reason', cancellation_reason)
           if (status !== 'incomplete') {
             const companyId = stripeSub?.metadata?.company_id
               ? String(stripeSub.metadata.company_id)

@@ -7,13 +7,21 @@ export const CompanyNotificationController = {
       const onlyUnread = req.query.onlyUnread === 'true'
       const limit = Number(req.query.limit) || 50
       const offset = Number(req.query.offset) || 0
-
-      const notifications = await CompanyNotification.findByCompany(
-        companyId,
-        onlyUnread,
-        limit,
-        offset
-      )
+      const isUser = Number(req.query.isUser) || 0
+      const notifications =
+        isUser == 1
+          ? await CompanyNotification.findByUser(
+              companyId,
+              onlyUnread,
+              limit,
+              offset
+            )
+          : await CompanyNotification.findByCompany(
+              companyId,
+              onlyUnread,
+              limit,
+              offset
+            )
 
       res.json({ notifications })
     } catch (err) {
@@ -46,8 +54,11 @@ export const CompanyNotificationController = {
     try {
       const companyId = Number(req.params.companyId)
       const id = Number(req.params.id)
+      const isUser = Number(req.query.isUser) || 0
 
-      const ok = await CompanyNotification.markAsRead(id, companyId)
+      const ok = isUser
+        ? await CompanyNotification.markAsRead({ id, userId: companyId })
+        : await CompanyNotification.markAsRead({ id, companyId })
       if (!ok) return res.status(404).json({ error: 'Not found' })
 
       const notification = await CompanyNotification.getById(id)
@@ -61,7 +72,11 @@ export const CompanyNotificationController = {
   async markAllAsRead(req, res) {
     try {
       const companyId = Number(req.params.companyId)
-      const updated = await CompanyNotification.markAllAsRead(companyId)
+      const isUser = Number(req.query.isUser) || 0
+
+      const updated = isUser
+        ? await CompanyNotification.markAllAsRead({ userId: companyId })
+        : await CompanyNotification.markAllAsRead({ companyId })
       res.json({ updated })
     } catch (err) {
       console.error(err)
