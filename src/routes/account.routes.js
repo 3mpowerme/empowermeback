@@ -6,7 +6,7 @@ import { updateProfileSchema } from '../schemas/user.schema.js'
 const router = Router()
 
 router.get('/', AccountController.getAll)
-router.put('/profile', validate(updateProfileSchema), AccountController.updateProfile)
+router.put('/', validate(updateProfileSchema), AccountController.updateProfile)
 router.get('/:companyId', AccountController.getCompanySetupByCompanyId)
 router.put('/:companyId', AccountController.update)
 
