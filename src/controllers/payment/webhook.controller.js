@@ -132,12 +132,16 @@ export const WebhookController = {
         case 'invoice.paid': {
           const invoice = event.data.object
           console.log('invoice', invoice)
+          if (invoice.billing_reason === 'subscription_create') {
+            console.log('first payment')
+          }
+        }
+        case 'invoice.created': {
+          const invoice = event.data.object
+          console.log('invoice', invoice)
           if (invoice.billing_reason === 'subscription_cycle') {
             // it's automatic payment
             console.log('automatic payment (recurrent)')
-          }
-          if (invoice.billing_reason === 'subscription_create') {
-            console.log('first payment')
           }
         }
 
