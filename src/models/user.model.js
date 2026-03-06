@@ -24,6 +24,17 @@ export const User = {
     return { id: result.insertId, email, country_id, role_id: defaultRoleId }
   },
 
+  async updateById(id, fields) {
+    const keys = Object.keys(fields || {})
+    if (!keys.length) return { updated: false }
+
+    const setClause = keys.map((k) => `\`${k}\` = ?`).join(', ')
+    const values = keys.map((k) => fields[k])
+
+    await db.query(`UPDATE users SET ${setClause} WHERE id = ?`, [...values, id])
+    return { updated: true }
+  },
+
   async remove(id) {
     await db.query('DELETE FROM users WHERE id = ?', [id])
     return { message: 'User deleted successfully' }

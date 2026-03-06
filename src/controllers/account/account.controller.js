@@ -1,6 +1,7 @@
 import { Account } from '../../models/account.model.js'
 import { Address } from '../../models/address.model.js'
 import { UserIdentity } from '../../models/userIdentity.model.js'
+import { User } from '../../models/user.model.js'
 
 export const AccountController = {
   async getCompanySetupByCompanyId(req, res) {
@@ -57,6 +58,20 @@ export const AccountController = {
       return res.status(200).json(result)
     } catch (error) {
       res.status(500).json({ error: error.message })
+    }
+  },
+
+  async updateProfile(req, res) {
+    try {
+      const { sub } = req.user
+      const { userId } = await UserIdentity.getUserIdBySub(sub)
+      const { name } = req.body
+
+      await User.updateById(userId, { name })
+
+      return res.status(200).json({ updated: true })
+    } catch (error) {
+      return res.status(500).json({ error: error.message })
     }
   },
 }
