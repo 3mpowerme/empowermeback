@@ -1,203 +1,306 @@
-## EmpowerMe Project Delivery Checklist
+# Checklist de Entrega del Proyecto EmpowerMe
 
-_Last update: 2026-03-08_
+_Fecha de actualización: 2026-03-08_
 
-This document inventories the functionality currently present in EmpowerMe across:
-- Backend API (`empowermeback`)
+## Objetivo del documento
+Este checklist consolida, en español y con trazabilidad técnica, el estado real del sistema EmpowerMe para:
+- Entrega formal al cliente.
+- Validación interna del avance del producto.
+- Preparación de despliegue/comercialización.
+
+Incluye análisis cruzado entre **documentación existente** y **código implementado** en:
 - Frontend App (`empowermefront`)
-- Landing (`empowermelanding`)
-- Database script (`dev_androide_17/db/empowerMe database.sql`)
-
-### Status legend
-- ✅ **Implemented**: present in code and connected to known flows.
-- ⚠️ **Partial**: implemented but with known limitations, inconsistencies, or missing standardization.
-- ❌ **Not found**: not identified in current codebase.
+- Backend (`empowermeback`)
+- Landing App (`empowermelanding`)
+- Scripts SQL/automatizaciones (`dev_androide_17`)
 
 ---
 
-## 1) Frontend App (React) - Functional Checklist
-
-### 1.1 Authentication
-- [x] ✅ Login (`/login`)  
-- [x] ✅ Sign up (`/signup`)  
-- [x] ✅ Forgot password (`/forgotPassword`)  
-- [x] ✅ Confirm forgot password (`/confirmForgotPassword`)  
-- [x] ✅ Verify email (`/verifyEmail`)  
-- [x] ✅ OAuth callback handler (`/auth/callback`)  
-
-**Evidence:** `empowermefront/src/routes/AppRoutes.jsx`, `features/Auth/*`
-
-### 1.2 Company onboarding and initial setup
-- [x] ✅ Build company wizard (`/buildCompany`) with multi-step flow  
-- [x] ✅ Start conceptualization (`/start-conceptualization`)  
-
-**Evidence:** `features/BuildCompany/*`, `features/StartConceptualization/*`
-
-### 1.3 Protected dashboard and modules
-- [x] ✅ Private dashboard shell (`/dashboard/*`)  
-- [x] ✅ Home, notifications, account, appointments  
-- [x] ✅ Build company / taxes and accounting / legal services sections  
-- [x] ✅ Conceptualization flow and payment screen  
-- [x] ✅ Business orientation / graphic design / logo design  
-- [x] ✅ Legal and tax compliance / business profile  
-- [x] ✅ Repository / file repository screens  
-
-**Evidence:** `AppRoutes.jsx`, `features/Dashboard/*`, `components/FileRepository/*`
-
-### 1.4 Role-based access control (frontend)
-- [x] ✅ Role-guarded pages:
-  - Services (`allow: [1,2]`)
-  - Panel (`allow: [1]`)
-  - Companies (`allow: [1,2]`)
-  - Users (`allow: [1]`)
-
-**Evidence:** `components/RoleGuard/RoleGuard.jsx`, `routes/AppRoutes.jsx`
-
-### 1.5 Payments and scheduling UX
-- [x] ✅ Stripe payment modals/components  
-- [x] ✅ Service-specific pay-and-schedule flows  
-- [x] ✅ Calendly popup integration components  
-
-**Evidence:** `components/stripe/*`, `components/PayAndScheduleAppointment/*`, `components/CalendlyPopup/*`
-
-### 1.6 i18n and responsiveness
-- [x] ✅ i18n setup (`en` and `es`)  
-- [x] ✅ Tailwind-based responsive UI classes across routes/components  
-
-**Evidence:** `i18n.js`, `locales/en/common.json`, `locales/es/common.json`, route/component classes
+## Leyenda de estado
+- ✅ **Implementado**: existe en código y se identifica su punto técnico.
+- ⚠️ **Parcial/Inconsistente**: existe, pero con limitaciones o sin estandarización completa.
+- ❌ **No encontrado**: no se encontró implementación en el estado actual del código.
 
 ---
 
-## 2) Backend API (Node/Express) - Functional Checklist
+## 1) Análisis previo obligatorio realizado (documentación + código)
 
-### 2.1 Authentication and user lifecycle
-- [x] ✅ Signup/login/verify/reset token flows  
-- [x] ✅ Cognito integration for auth operations  
-- [x] ✅ JWT-based protected route middleware  
+## 1.1 Documentación revisada por repositorio
 
-**Evidence:** `routes/auth.routes.js`, `controllers/auth/auth.controller.js`, `services/cognito.service.js`, `middlewares/auth.middleware.js`
+### Backend (`empowermeback`)
+- Carpeta `documentation/` completa, incluyendo:
+  - `README.md`
+  - `routing-map.md`
+  - `endpoint-inventory.md` (178 endpoints montados)
+  - documentación por módulo (`auth.md`, `company*.md`, `billing.md`, `subscription.md`, `webhook.md`, etc.)
+  - análisis técnicos de flujo en `documentation/company-creation-flow/*.md`
 
-### 2.2 Company and onboarding domain
-- [x] ✅ Company CRUD-oriented operations  
-- [x] ✅ Build-company protected/public flows  
-- [x] ✅ Company shareholder/legal representative/tax info modules  
-- [x] ✅ Multiple company intake modules (constitution, dissolution, modifications, etc.)  
+### Frontend (`empowermefront`)
+- `README.md`
+- `steering/product.md`
+- `steering/structure.md`
+- `steering/tech.md`
 
-**Evidence:** `routes/company*.routes.js`, `routes/protectedBuildCompany.routes.js`, `routes/intakes.routes.js`
+### Landing (`empowermelanding`)
+- `README.md`
+- `steering/product.md`
+- `steering/structure.md`
+- `steering/tech.md`
 
-### 2.3 Service operations and requests
-- [x] ✅ Service catalog and plan association modules  
-- [x] ✅ Company registered services  
-- [x] ✅ Service requests and service documents  
-- [x] ✅ Executive assignment/update operations  
+### SQL y automatizaciones (`dev_androide_17`)
+- `README.md`
+- `automations/README.md`
+- `documents/empowerme-multi-country-analysis-cl-mx.md`
+- `documents/empowerme-multi-country-backlog-executable.md`
+- `db/empowerMe database.sql`
 
-**Evidence:** `routes/serviceRequest.routes.js`, `routes/serviceDocuments.routes.js`, `routes/companyRegisteredServies.routes.js`, `routes/executive.routes.js`, `routes/plan.routes.js`
-
-### 2.4 Billing, subscriptions, and webhooks
-- [x] ✅ Payment intents and billing endpoints  
-- [x] ✅ Subscription create/list/cancel flows  
-- [x] ✅ Stripe webhook handling  
-
-**Evidence:** `config/stripe.js`, `routes/billing.routes.js`, `routes/subscription.routes.js`, `routes/webhook.routes.js`, `controllers/payment/*`
-
-### 2.5 Appointments and scheduling
-- [x] ✅ Appointment and appointment-plan modules  
-- [x] ✅ Public/private Calendly endpoints + webhook setup  
-
-**Evidence:** `routes/appointment.routes.js`, `routes/appointmentPlan.routes.js`, `routes/publicCalendly.routes.js`, `routes/privateCalendly.routes.js`, `controllers/external/calendly.controller.js`
-
-### 2.6 Notifications and internal communication
-- [x] ✅ Company notification endpoints  
-- [x] ✅ Executive notification creation endpoint  
-- [x] ✅ Email service modules integrated into flows  
-
-**Evidence:** `routes/companyNotification.routes.js`, `routes/executive.routes.js`, `services/email/*`
-
-### 2.7 AI capabilities
-- [x] ✅ AI route/controller available  
-- [x] ✅ OpenAI and Gemini service adapters configured  
-- [x] ✅ Prompt/template assets for generated analyses  
-
-**Evidence:** `routes/ia.routes.js`, `controllers/ia/ia.controller.js`, `services/ai/*`, `templates/*`
-
-### 2.8 API coverage inventory
-- [x] ✅ Endpoint inventory and route docs available  
-- [x] ✅ Route-level documentation by module in `/documentation`  
-
-**Evidence:** `documentation/endpoint-inventory.md`, `documentation/*.md`
+## 1.2 Validación cruzada realizada
+Se validó explícitamente:
+1. Funcionalidades descritas en documentación vs rutas/archivos reales.
+2. Endpoints documentados vs endpoints montados en `src/routes/*`.
+3. Flujos descritos vs componentes/páginas del frontend y landing.
+4. Funcionalidades presentes en código que no están claramente descritas como alcance funcional de entrega al cliente.
 
 ---
 
-## 3) Landing (Next.js) - Functional Checklist
+## 2) Inventario funcional - Frontend App (React)
 
-### 3.1 Public marketing site
-- [x] ✅ Header/Hero/Cards/Feature/Footer sections implemented  
-- [x] ✅ Single-page marketing experience with static content  
+## 2.1 Páginas de frontend creadas (identificadas en código)
 
-**Evidence:** `empowermelanding/src/app/page.js`, `components/sections/*`
+### Autenticación
+- ✅ `features/Auth/LoginPage.jsx`
+- ✅ `features/Auth/SignUpPage.jsx`
+- ✅ `features/Auth/ForgotPasswordPage.jsx`
+- ✅ `features/Auth/ConfirmForgotPasswordPage.jsx`
+- ✅ `features/Auth/VerifyEmailPage.jsx`
+- ✅ `features/Auth/CallbackPage.jsx`
 
-### 3.2 Lead capture and conversion flows
-- [ ] ❌ Lead form submission flow not found  
-- [ ] ❌ Direct signup integration to backend not found  
-- [ ] ❌ CRM/webhook capture from landing not found  
+### Flujo de creación/onboarding
+- ✅ `features/BuildCompany/BuildCompanyWizardPage.jsx`
+- ✅ `features/StartConceptualization/StartConceptualization.jsx` (ruta en AppRoutes)
 
-**Evidence:** No submit/API integration detected in landing source files.
+### Dashboard y módulos
+- ✅ `features/Dashboard/DashboardPage.jsx`
+- ✅ `features/Dashboard/DashboardHomePage.jsx`
+- ✅ `features/Dashboard/Notifications/NotificationsPage.jsx`
+- ✅ `features/Dashboard/Account/AccountPage.jsx`
+- ✅ `features/Dashboard/Appointments/AppointmentsPage.jsx`
+- ✅ `features/Dashboard/DashboardBuildCompanyPage.jsx`
+- ✅ `features/Dashboard/DashboardTaxesAndAccountingPage.jsx`
+- ✅ `features/Dashboard/LegalServices/LegalServicesPage.jsx`
+- ✅ `features/Dashboard/Conceptualization/ConceptualizationPage.jsx`
+- ✅ `features/Dashboard/Conceptualization/ContinueConceptualizationPage.jsx`
+- ✅ `features/Dashboard/Conceptualization/PayConceptualizationPage.jsx`
+- ✅ `features/Dashboard/BusinessOrientation/BusinessOrientationPage.jsx`
+- ✅ `features/Dashboard/DashboardGraphicDesignPage.jsx`
+- ✅ `features/Dashboard/GraphicDesign/LogoDesignPage.jsx`
+- ✅ `features/Dashboard/DashboardBusinessProfilePage.jsx`
+- ✅ `features/Dashboard/DashboardLegalAndTaxCompliancePage.jsx`
+- ✅ `features/Dashboard/Services/ServicesPage.jsx`
+- ✅ `features/Dashboard/Users/UsersPage.jsx`
 
----
+## 2.2 Flujos de usuario del frontend
+- [x] ✅ Autenticación completa (login/signup/recuperación/verificación)
+- [x] ✅ Navegación protegida por sesión (`PrivateRoute`)
+- [x] ✅ Dashboard por módulos funcionales
+- [x] ✅ Flujo wizard de creación de empresa
+- [x] ✅ Flujo de conceptualización y activos de marca
+- [x] ✅ Gestión de notificaciones, cuenta, citas y repositorio documental
+- [x] ✅ Pago y agendamiento con componentes Stripe + Calendly
 
-## 4) Database (SQL) - Functional Checklist
+## 2.3 Control de acceso por rol
+- [x] ✅ `RoleGuard` aplicado en páginas administrativas y operativas
+  - Servicios (`allow [1,2]`)
+  - Panel (`allow [1]`)
+  - Compañías (`allow [1,2]`)
+  - Usuarios (`allow [1]`)
 
-### 4.1 Core entities
-- [x] ✅ Users, companies, services, plans, subscriptions tables present  
-- [x] ✅ Service-order and intake-related persistence present  
-- [x] ✅ Catalog tables and supporting relations present  
-
-**Evidence:** `dev_androide_17/db/empowerMe database.sql`
-
-### 4.2 Referential and operational support
-- [x] ✅ Foreign-key-linked business structure exists  
-- [x] ✅ Catalog-driven behavior supported (countries, roles, services, etc.)  
-
-**Evidence:** table definitions and relationships in SQL script.
-
----
-
-## 5) Cross-system status summary
-
-### 5.1 Clearly implemented end-to-end
-- [x] ✅ Auth + dashboard access
-- [x] ✅ Company onboarding + company profile modules
-- [x] ✅ Service request lifecycle + executive operations
-- [x] ✅ Billing/subscription/webhook backbone
-- [x] ✅ Notification surfaces
-
-### 5.2 Implemented with limitations
-- [x] ⚠️ Multi-country support is schema-ready but behavior remains mostly Chile-oriented in key flows.
-- [x] ⚠️ Permission controls exist, but a single formal role-permission matrix is not documented as one canonical source.
-
-### 5.3 Missing / not detected
-- [ ] ❌ Landing lead capture + backend conversion flow
-- [ ] ❌ Fully standardized cross-module country rules abstraction
-
----
-
-## 6) Recommended acceptance checklist for project handoff
-
-Use this list to quickly evaluate delivery readiness:
-
-- [ ] All critical backend modules reachable from current route map
-- [ ] Frontend dashboard paths verified by role (Admin/Executive/User)
-- [ ] Stripe test flow validated (intent, subscription, webhook reconciliation)
-- [ ] Core service order flow validated end-to-end
-- [ ] Notification flow validated (in-app + email trigger points)
-- [ ] Landing conversion strategy defined (or explicitly marked out of scope)
-- [ ] Multi-country scope explicitly marked as current-state partial
-- [ ] API docs and endpoint inventory synced with latest mounted routes
+## 2.4 Internacionalización y UX móvil
+- [x] ✅ i18n configurado (`src/locales/en/common.json`, `src/locales/es/common.json`)
+- [x] ✅ Uso generalizado de Tailwind y clases responsive
+- [x] ⚠️ Persisten señales de lógica país centrada en Chile en partes del dominio (documentado en análisis multi-país)
 
 ---
 
-## 7) Repositories analyzed
-- Backend API: `empowermeback`
-- Frontend App: `empowermefront`
-- Landing App: `empowermelanding`
-- SQL/automation resources: `dev_androide_17`
+## 3) Inventario funcional - Backend (Node/Express)
+
+## 3.1 Estado global de API
+- [x] ✅ API modular con rutas por dominio (`src/routes`)
+- [x] ✅ Inventario documentado de **178 endpoints montados**
+- [x] ✅ Separación de rutas públicas/protegidas y middleware de auth
+
+## 3.2 Módulos de negocio implementados
+
+### Identidad y acceso
+- [x] ✅ Auth (signup, login, verify email, refresh, forgot/reset, logout, Google)
+- [x] ✅ Middleware JWT/seguridad de rutas protegidas
+
+### Empresa y configuración
+- [x] ✅ Módulo company + build-company + account
+- [x] ✅ Tax info, legal representative, shareholders
+- [x] ✅ Solicitudes/intakes de servicios legales/contables
+
+### Servicios y operación
+- [x] ✅ Catálogos (country/region/feature/businessSector/etc.)
+- [x] ✅ Planes y servicios registrados por empresa
+- [x] ✅ Service requests + documentos de servicio
+- [x] ✅ Módulo ejecutivo (panel, asignación, estatus, usuarios, roles)
+
+### Facturación y suscripción
+- [x] ✅ Billing (`create-intent`, `portal`, `service-order`)
+- [x] ✅ Subscription (alta, consulta, cancelación)
+- [x] ✅ Webhook Stripe
+
+### Citas y agenda
+- [x] ✅ Appointments + appointment plans
+- [x] ✅ Integración Calendly (public/private webhook flows)
+
+### IA y generación de contenido
+- [x] ✅ Endpoint IA
+- [x] ✅ Integraciones OpenAI + Gemini
+- [x] ✅ Plantillas de análisis/plan de negocio en `src/templates`
+
+## 3.3 Endpoints disponibles (resumen)
+- [x] ✅ Catálogo completo documentado en `documentation/endpoint-inventory.md`
+- [x] ✅ Mapeo de montaje en `documentation/routing-map.md`
+- [x] ✅ Documentación por módulo en `documentation/*.md`
+
+---
+
+## 4) Inventario funcional - Landing App (Next.js)
+
+## 4.1 Componentes y secciones creadas
+- [x] ✅ `components/sections/Header.js`
+- [x] ✅ `components/sections/Hero.js`
+- [x] ✅ `components/sections/CardsSection.js`
+- [x] ✅ `components/sections/FeatureSection.js`
+- [x] ✅ `components/sections/Footer.js`
+
+## 4.2 Flujo actual de landing
+- [x] ✅ Página pública de marketing (`src/app/page.js`)
+- [x] ✅ Estructura orientada a propuesta de valor y presentación de funcionalidades
+- [x] ✅ Diseño responsive base
+
+## 4.3 Conversión comercial desde landing
+- [ ] ❌ Flujo de captura de leads con envío backend no identificado
+- [ ] ❌ Flujo de registro directo desde landing no identificado
+- [ ] ❌ Integración explícita CRM/webhook para leads no identificada
+
+---
+
+## 5) Inventario funcional - Base de datos y scripts
+
+## 5.1 Script SQL principal
+- [x] ✅ Script base identificado en:  
+  `/var/www/empowerme/dev_androide_17/db/empowerMe database.sql`
+- [x] ✅ Entidades núcleo presentes (users, companies, services, plans, subscriptions, intakes, etc.)
+- [x] ✅ Relaciones y catálogos base presentes (countries, roles, region, servicios)
+
+## 5.2 Automatizaciones
+- [x] ✅ Automatización de creación de empresa documentada (`automations/company_creation/*`)
+- [x] ✅ Trigger definido y flujo técnico implementado (cliente API, validadores, orquestador)
+- [x] ⚠️ Persistencia de estado local en `.state.json` (limitación para concurrencia/escalabilidad)
+
+---
+
+## 6) Validación: documentación vs implementación real
+
+## 6.1 Funcionalidades documentadas y confirmadas en código
+- [x] ✅ Autenticación y gestión de sesión
+- [x] ✅ Dashboard modular por áreas
+- [x] ✅ Gestión empresarial (perfil, setup, tax/legal)
+- [x] ✅ Ciclo de servicios y solicitudes
+- [x] ✅ Facturación/suscripciones/webhooks
+- [x] ✅ Integración de agenda
+- [x] ✅ Módulo IA backend
+
+## 6.2 Funcionalidades documentadas pero no confirmadas end-to-end
+- [ ] ❌ Captura de leads y conversión desde landing (no encontrada en código landing actual)
+- [x] ⚠️ Soporte multi-país total: documentado como necesidad/roadmap, no completado de forma integral en todo el sistema
+
+## 6.3 Funcionalidades implementadas detectadas con documentación parcial o dispersa
+- [x] ⚠️ Nivel de detalle por permisos/roles existe técnicamente, pero no hay una matriz única consolidada por módulo/acción para entrega ejecutiva
+- [x] ⚠️ Automatización operativa en `dev_androide_17` existe, pero su documentación funcional para cliente final está más orientada a operación técnica interna
+
+---
+
+## 7) Integraciones externas identificadas
+- [x] ✅ AWS Cognito (auth)
+- [x] ✅ Stripe (intents, subscriptions, webhook)
+- [x] ✅ Calendly (eventos/agenda)
+- [x] ✅ OpenAI
+- [x] ✅ Gemini
+- [x] ✅ Servicios de email (backend)
+
+---
+
+## 8) Estado de completitud por módulo del producto
+
+### 8.1 Núcleo de aplicación
+- [x] ✅ Completo para operación base (auth, dashboard, company, servicios)
+
+### 8.2 Operación administrativa
+- [x] ✅ Completo en estructura API + pantallas frontend principales
+- [x] ⚠️ Se recomienda reforzar documentación ejecutiva de permisos por rol
+
+### 8.3 Cobros y suscripciones
+- [x] ✅ Implementado
+- [x] ⚠️ Existen hallazgos previos de ajustes operativos deseables (multi-país/hardcodes en análisis históricos)
+
+### 8.4 Landing comercial
+- [x] ✅ Implementada como sitio de marketing
+- [ ] ❌ No confirmada como embudo completo de captación/registro automatizado
+
+### 8.5 Multi-país
+- [x] ⚠️ Preparación parcial (estructura base existe)
+- [ ] ❌ No finalizado end-to-end para Chile + México según análisis técnico existente
+
+---
+
+## 9) Checklist de recepción para cliente (entrega integral)
+
+## 9.1 Frontend App
+- [ ] QA de rutas públicas y protegidas
+- [ ] QA mobile de módulos críticos (login, dashboard, wizard, pagos)
+- [ ] Validación de permisos por rol en pantallas restringidas
+- [ ] Validación de i18n según alcance comercial
+
+## 9.2 Backend API
+- [ ] Smoke test de endpoints críticos (auth, company, service-request, billing, subscription)
+- [ ] Validación de seguridad de rutas protegidas
+- [ ] Verificación de consistencia documentación ↔ rutas montadas
+
+## 9.3 Landing
+- [ ] Revisión de copy y propuesta comercial final
+- [ ] Definir si lead capture/registro desde landing está in-scope o fuera de alcance
+- [ ] Confirmación de CTAs y enlaces hacia app productiva
+
+## 9.4 Base de datos
+- [ ] Revisión de script SQL final y seeds vigentes
+- [ ] Confirmación de integridad referencial en ambiente destino
+- [ ] Validación de catálogos y parámetros operativos
+
+## 9.5 Integraciones
+- [ ] Stripe: pruebas de intent + subscription + webhook
+- [ ] Cognito: ciclo completo de auth y recuperación
+- [ ] Calendly: creación/actualización de agenda
+- [ ] IA: validación básica de respuesta y errores controlados
+
+---
+
+## 10) Conclusión ejecutiva
+EmpowerMe cuenta con una **base funcional robusta** en backend, frontend y procesos de cobro/suscripción, y con una landing operativa para posicionamiento comercial. El sistema está en un estado apto para una entrega técnica controlada, con foco en validación final por ambiente y cierre de decisiones de alcance comercial (principalmente en conversión de landing y estandarización multi-país).
+
+Este checklist puede utilizarse como documento base de aceptación con cliente y como guía interna para pre-producción.
+
+---
+
+## 11) Repositorios y rutas analizadas
+- Frontend App: `git@github.com:3mpowerme/empowermefront.git`  
+  Ruta local: `/var/www/empowerme/empowermefront`
+- Landing App: `git@github.com:3mpowerme/empowermelanding.git`  
+  Ruta local: `/var/www/empowerme/empowermelanding`
+- Backend: `git@github.com:3mpowerme/empowermeback.git`  
+  Ruta local: `/var/www/empowerme/empowermeback`
+- Script base de datos: `git@github.com:marianoEmpowerMe/dev_androide_17.git`  
+  Ruta SQL: `/var/www/empowerme/dev_androide_17/db/empowerMe database.sql`
