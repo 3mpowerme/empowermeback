@@ -667,3 +667,106 @@ Consolidación transversal en:
 - `src/controllers/intakes/intakes.controller.js`
 
 Estos endpoints resuelven valores reutilizables por compañía, metadata por servicio y consultas de citas por código de servicio.
+
+---
+
+## Funcionalidades por módulo (detalle funcional)
+
+### Autenticación y control de acceso
+- Registro de usuario (email/password)
+- Inicio de sesión
+- Manejo de callback de login federado
+- Verificación de correo
+- Inicio de recuperación de contraseña
+- Confirmación de cambio de contraseña
+- Resolución de sesión actual (`/me`)
+- Cierre de sesión
+- Protección de rutas (frontend + backend)
+- Acceso por rol (admin/ejecutivo/usuario)
+
+### Onboarding de empresa (Build Company)
+- Inicio del wizard de onboarding
+- Captura de datos base de empresa
+- Selección de catálogos (país/región/rubro, etc.)
+- Validación por pasos
+- Guardado progresivo/continuidad de estado
+- Creación final de empresa y vínculo usuario-empresa
+- Reanudación de onboarding incompleto
+
+### Perfil central de empresa
+- Crear perfil de empresa
+- Editar datos generales
+- Gestionar representante legal
+- Gestionar socios/accionistas
+- Gestionar información tributaria
+- Consultar estado/configuración de empresa
+
+### Servicios, planes, suscripciones y cobros
+- Listar servicios disponibles
+- Listar planes
+- Crear intent de pago (pago único)
+- Ejecutar flujo de pago único
+- Crear suscripción
+- Actualizar/reconciliar estado de suscripción
+- Cancelar suscripción
+- Procesar eventos webhook de Stripe
+- Reflejar estado de pago/suscripción en disponibilidad de servicios
+
+### Solicitudes de servicio e intakes legales/contables
+- Crear intake de contabilidad mensual
+- Crear intake de proceso de auditoría
+- Crear intake de preparación de balance
+- Crear intake de disolución
+- Crear intake de registro de accionistas
+- Crear intake de revisión de constitución
+- Crear intake de oficina virtual
+- Crear intake de junta ordinaria de accionistas
+- Crear intake de modificaciones de sociedad
+- Crear intake de compra/venta
+- Obtener valores reutilizables de intake por empresa
+- Consultar citas por código de servicio para continuidad operativa
+
+### Citas y Calendly
+- Listar planes de cita
+- Crear cita
+- Consultar citas por empresa/servicio
+- Gestionar agendamiento desde flujos de pago de servicios
+- Procesar flujos públicos/privados de Calendly
+- Actualizar estados de cita por webhook de Calendly
+- Soportar cancelación/reagendamiento según ciclo del evento
+
+### Notificaciones y comunicación
+- Consultar notificaciones por empresa
+- Soporte de visualización de estado de notificaciones en dashboard
+- Consultar canales de atención
+- Soportar disparadores de comunicación por eventos
+
+### Cuenta de usuario, roles y acceso por funcionalidades
+- Consultar datos de cuenta/perfil
+- Consultar catálogo de funcionalidades
+- Consultar mapeo usuario-funcionalidad
+- Aplicar guardas de acceso por rol en frontend
+- Exponer endpoints de gestión admin/ejecutivo
+- Actualizar asignación de roles de usuario
+
+### IA, conceptualización y diseño de logo
+- Iniciar flujo de conceptualización
+- Generar resultados de análisis de negocio/mercado
+- Capturar atributos de marca (nombre/slogan/colorimetría/tipo de logo)
+- Generar opciones de logo
+- Seleccionar logo final
+- Persistir contexto de conceptualización + logo seleccionado
+- Renderizar/descargar activos del brand book
+
+### Landing y adquisición de leads
+- Mostrar propuesta de valor comercial
+- Exponer CTAs a registro/login/onboarding
+- Soportar interacciones/formularios públicos (si están configurados)
+- Enrutar usuarios al embudo de la app
+
+### Base de datos y activos de automatización
+- Persistir entidades de negocio transversales
+- Mantener baseline del esquema SQL
+- Soportar mapeos relacionales de rol/servicio/intake
+- Registrar trazabilidad operativa en `dev_androide_17`
+

@@ -792,3 +792,106 @@ Cross-intake helpers are centralized in:
 - `src/controllers/intakes/intakes.controller.js`
 
 These provide reusable values, service metadata, and appointment queries by service code.
+
+---
+
+## Functional Capabilities by Module (Detailed)
+
+### Authentication & Access Control
+- User registration (email/password)
+- User login
+- Federated login callback handling
+- Email verification
+- Password recovery initiation
+- Password reset confirmation
+- Session resolution (`/me`)
+- Logout
+- Protected route enforcement (frontend + backend)
+- Role-based route access (admin/executive/user scopes)
+
+### Company Onboarding (Build Company)
+- Start onboarding wizard
+- Capture company base data
+- Select catalog-driven values (country/region/sector, etc.)
+- Step-by-step validation
+- Progressive save/state continuation
+- Final company creation and user-company linking
+- Resume partially completed onboarding
+
+### Company Core Profile
+- Create company profile
+- Edit company general information
+- Manage legal representative data
+- Manage shareholders/partners data
+- Manage company tax info
+- Retrieve company profile/configuration state
+
+### Services, Plans, Subscriptions & Billing
+- List available services
+- List plans
+- Create payment intent (single payment)
+- Execute single payment flow
+- Create subscription
+- Update/reconcile subscription status
+- Cancel subscription
+- Process Stripe webhook events
+- Reflect payment/subscription state in service availability
+
+### Service Requests & Legal/Accounting Intakes
+- Create monthly accounting intake
+- Create audit process intake
+- Create balance preparation intake
+- Create dissolution intake
+- Create shareholder registry intake
+- Create constitution review intake
+- Create virtual office intake
+- Create ordinary shareholders meeting intake
+- Create company modifications intake
+- Create purchase/sale intake
+- Retrieve reusable intake values by company
+- Query appointments by service code for intake continuity
+
+### Appointments & Calendly
+- List appointment plans
+- Create appointment
+- Retrieve appointments by company/service
+- Handle scheduling from service payment flows
+- Process Calendly public/private event flows
+- Update appointment status from Calendly webhook events
+- Cancel/reschedule support based on event lifecycle
+
+### Notifications & Communication
+- Retrieve company notifications
+- Support notification state visibility in dashboard
+- Retrieve customer service channels
+- Support event-driven communication hooks
+
+### User Account, Roles & Feature Access
+- Retrieve account/profile data
+- Retrieve system features
+- Retrieve user-feature mapping
+- Apply frontend access guards by role
+- Admin/executive role management endpoints
+- Update user role assignments
+
+### AI, Conceptualization & Logo Design
+- Start conceptualization flow
+- Generate business/market analysis outputs
+- Capture branding attributes (name/slogan/colorimetry/logo type)
+- Generate logo options
+- Select final logo
+- Persist conceptualization + selected logo context
+- Render/download brand-book assets
+
+### Landing & Lead Acquisition
+- Display marketing value proposition
+- Entry CTAs to signup/login/onboarding
+- Public interaction/form flows (where configured)
+- Transition users into app funnel
+
+### Database & Automation Assets
+- Persist business entities across modules
+- Maintain SQL schema baseline
+- Support role/service/intake relational mapping
+- Track operational execution logs in `dev_androide_17`
+
