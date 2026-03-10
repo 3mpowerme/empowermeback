@@ -578,3 +578,92 @@ Desalineación de esquema, scripts no idempotentes, drift de migraciones.
 - [x] Checklist extenso y útil para recepción integral con cliente
 - [x] Incluye landing, frontend, backend y base de datos
 - [x] Se entrega versión en inglés y versión en español
+
+---
+
+## Anexo - Cobertura ampliada solicitada (Dev task 12)
+
+### A) Alcance de diseño de logo (módulo Graphic Design)
+
+#### Cobertura funcional
+- Ruta dedicada: `dashboard/graphic_design/logo_design`.
+- Página/componente principal: `features/Dashboard/GraphicDesign/LogoDesignPage`.
+- Selector reutilizable: `components/LogoSelector/LogoSelector.jsx`.
+- Integración en conceptualización/branding:
+  - `ConceptualizationWizardStep5` (selección de tipo de logo)
+  - `ConceptualizationWizardStep6` (selección de logo generado)
+  - `BrandBook` (vista previa/descarga del logo)
+
+#### Objetivo de negocio
+Permitir generación/selección de identidad visual dentro del flujo de conceptualización de empresa.
+
+#### Dependencias de datos/API
+- Endpoints de conceptualización y consulta de historial de logos.
+- Persistencia de logo seleccionado en el flujo de brand book.
+
+#### Casos borde
+- Aún no hay logos generados.
+- Usuario intenta continuar sin seleccionar logo.
+- Fallo al descargar activos de imagen.
+
+### B) Alcance de app administradora por tipos de usuario (ejecutivo/admin)
+
+#### Frontend protegido por rol
+Las restricciones por rol se aplican con `RoleGuard` en `src/routes/AppRoutes.jsx` para:
+- `dashboard/services`
+- `dashboard/panel`
+- `dashboard/companies`
+- `dashboard/users`
+
+#### Backend de administración de roles
+Endpoints relevantes en `src/routes/executive.routes.js`:
+- `GET /api/executive/roles`
+- `POST /api/executive/roles/:roleId` (actualización de rol)
+- `GET /api/executive/executives/:serviceId`
+- Endpoints de apoyo para intake/asignación de servicios
+
+La implementación contempla flujos de mutación de rol (admin/ejecutivo) y mapeo contra tablas de roles.
+
+### C) Alcance de gestión de citas
+
+#### Frontend
+- Ruta: `dashboard/appointments`.
+- Componentes:
+  - `features/Dashboard/Appointments/AppointmentsPage.jsx`
+  - `features/Dashboard/Appointments/AppointmentsTable.jsx`
+- Integración pago->cita en múltiples componentes de `components/PayAndScheduleAppointment/*`.
+
+#### Backend
+- APIs de citas:
+  - `src/routes/appointment.routes.js`
+  - `src/routes/appointmentPlan.routes.js`
+- Integración Calendly:
+  - `src/routes/privateCalendly.routes.js`
+  - `src/routes/publicCalendly.routes.js`
+  - `controllers/external/calendly.controller.js`
+
+#### Flujo principal
+Pago/selección de servicio -> planificación de cita -> reserva -> sincronización webhook Calendly -> actualización de estado.
+
+### D) Inventario detallado de Wizards/Intakes
+
+Actualmente existen, como mínimo, los siguientes dominios:
+
+1. Monthly accounting intake (`monthlyAccounting.routes.js` / `accounting_client_intakes`)
+2. Audit process intake (`auditProcessIntake.routes.js` / `audit_process_intakes`)
+3. Balance preparation intake (`balancePreparationIntake.routes.js` / `balance_preparation_intakes`)
+4. Dissolution company intake (`dissolutionCompanyIntake.routes.js` / `dissolution_company_intakes`)
+5. Shareholder registry intake (`shareholderRegistry.routes.js` / `shareholder_registry_intakes`)
+6. Constitution review intake (`constitutionReviewIntake.routes.js` / `constitution_review_intakes`)
+7. Virtual office intake (`virtualOfficeIntake.routes.js` / `virtual_office_contract_intakes`)
+8. Ordinary shareholders meeting intake (`ordinaryShareholdersMeetingIntake.routes.js` / `ordinary_shareholders_meeting_intakes`)
+9. Company modifications intake (`companyModificationsIntake.routes.js` / `company_modifications_intakes`)
+10. Purchase/sale intake (`purchaseSaleIntake.routes.js` / `purchase_sale_intakes`)
+11. Wizard de onboarding Build Company (frontend)
+12. Wizard de conceptualización (frontend, incluyendo etapa de logo)
+
+Consolidación transversal en:
+- `src/routes/intakes.routes.js`
+- `src/controllers/intakes/intakes.controller.js`
+
+Estos endpoints resuelven valores reutilizables por compañía, metadata por servicio y consultas de citas por código de servicio.

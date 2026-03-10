@@ -700,3 +700,95 @@ Schema drift, migration mismatch, non-idempotent update scripts.
 - [x] Useful as an end-to-end acceptance checklist.
 - [x] Supports reception review for full platform delivery.
 - [x] Includes English + Spanish markdown versions.
+
+---
+
+## Addendum - Expanded Coverage Requested (Dev task 12)
+
+### A) Logo Design scope (Graphic Design module)
+
+#### Functional coverage
+- Dedicated route: `dashboard/graphic_design/logo_design`.
+- Main page/component: `features/Dashboard/GraphicDesign/LogoDesignPage`.
+- Shared selector: `components/LogoSelector/LogoSelector.jsx`.
+- Brand/visual integration in conceptualization:
+  - `ConceptualizationWizardStep5` (logo type selection)
+  - `ConceptualizationWizardStep6` (logo selection from generated options)
+  - `BrandBook` (logo preview/download)
+
+#### Business intent
+Enable brand identity generation/selection as part of company conceptualization and visual identity setup.
+
+#### Data/API dependencies
+- Conceptualization endpoints and logo history retrieval (`useLogoHistory`, conceptualization APIs).
+- Brand-book persistence flow (selected logo linked to conceptualization records).
+
+#### Edge cases
+- No logos generated yet.
+- User tries to continue without selecting logo.
+- Download issues for generated logo assets.
+
+### B) Administrator / Executive user-type application scope
+
+#### Frontend role-protected admin areas
+Role-based restrictions are implemented via `RoleGuard` in `src/routes/AppRoutes.jsx`, including:
+- `dashboard/services`
+- `dashboard/panel`
+- `dashboard/companies`
+- `dashboard/users`
+
+These are protected for specific roles (admin/executive combinations by route).
+
+#### Backend role operations
+Executive/admin management endpoints are exposed in:
+- `src/routes/executive.routes.js`
+  - `GET /api/executive/roles`
+  - `POST /api/executive/roles/:roleId` (role update by user)
+  - `GET /api/executive/executives/:serviceId`
+  - intake/service assignment helpers
+
+Controller implementation includes role mutation flows (`set_user_as_admin_by_email`, `set_user_as_executive_by_email`) and role table mapping.
+
+### C) Appointment management scope
+
+#### Frontend
+- Route: `dashboard/appointments`.
+- Components:
+  - `features/Dashboard/Appointments/AppointmentsPage.jsx`
+  - `features/Dashboard/Appointments/AppointmentsTable.jsx`
+- Payment-to-appointment transition is implemented in multiple payment completion components under `components/PayAndScheduleAppointment/*`.
+
+#### Backend
+- Appointment APIs:
+  - `src/routes/appointment.routes.js`
+  - `src/routes/appointmentPlan.routes.js`
+- Calendly integration:
+  - `src/routes/privateCalendly.routes.js`
+  - `src/routes/publicCalendly.routes.js`
+  - `controllers/external/calendly.controller.js`
+
+#### Key flow
+Service payment/selection -> appointment planning -> booking -> Calendly webhook synchronization -> appointment status updates.
+
+### D) Detailed Wizard/Intake inventory
+
+The system currently includes, at minimum, the following intake/wizard domains (route + table/controller-level coverage):
+
+1. Monthly accounting intake (`monthlyAccounting.routes.js` / `accounting_client_intakes`)
+2. Audit process intake (`auditProcessIntake.routes.js` / `audit_process_intakes`)
+3. Balance preparation intake (`balancePreparationIntake.routes.js` / `balance_preparation_intakes`)
+4. Dissolution company intake (`dissolutionCompanyIntake.routes.js` / `dissolution_company_intakes`)
+5. Shareholder registry intake (`shareholderRegistry.routes.js` / `shareholder_registry_intakes`)
+6. Constitution review intake (`constitutionReviewIntake.routes.js` / `constitution_review_intakes`)
+7. Virtual office intake (`virtualOfficeIntake.routes.js` / `virtual_office_contract_intakes`)
+8. Ordinary shareholders meeting intake (`ordinaryShareholdersMeetingIntake.routes.js` / `ordinary_shareholders_meeting_intakes`)
+9. Company modifications intake (`companyModificationsIntake.routes.js` / `company_modifications_intakes`)
+10. Purchase/sale intake (`purchaseSaleIntake.routes.js` / `purchase_sale_intakes`)
+11. Build-company onboarding wizard (frontend multi-step flow)
+12. Conceptualization wizard (frontend multi-step flow with brand/logo stages)
+
+Cross-intake helpers are centralized in:
+- `src/routes/intakes.routes.js`
+- `src/controllers/intakes/intakes.controller.js`
+
+These provide reusable values, service metadata, and appointment queries by service code.
