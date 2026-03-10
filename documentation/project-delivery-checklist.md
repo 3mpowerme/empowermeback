@@ -895,3 +895,40 @@ These provide reusable values, service metadata, and appointment queries by serv
 - Support role/service/intake relational mapping
 - Track operational execution logs in `dev_androide_17`
 
+
+---
+
+## User-Type Functional Analysis (Admin vs Executive)
+
+### Admin user (role-oriented capabilities)
+- Full visibility over service orders (global listing).
+- Access to admin-protected modules in dashboard (`services`, `panel`, `companies`, `users`).
+- User and role governance:
+  - View users list.
+  - View available roles.
+  - Change user role assignments.
+- Service-governance support:
+  - Configure which services are enabled per executive user.
+  - Review cross-company operational queue and statuses.
+
+### Executive user (role-oriented capabilities)
+- Access limited to assigned operational scope.
+- Service order work queue focused on assigned items.
+- Intake access by service and company for execution continuity.
+- Service-order lifecycle operations (status updates, follow-up actions).
+- Operational assignment handling for service orders.
+
+### Automatic service self-assignment support
+The platform supports service auto-assignment behavior through role-service configuration and assignment operations:
+- Executive service eligibility can be preconfigured (`user_services`).
+- Assignment endpoint exists for linking service orders to executives (`/api/executive/:serviceOrderId/assigne`).
+- Operationally, this enables fast/automatic assignment flows based on enabled service mappings.
+
+> Note: assignment behavior is controlled by backend role/service relationships and service-order assignment records.
+
+### Platform support: Mobile and Desktop
+EmpowerMe provides responsive support for both device contexts:
+- **Frontend stack** uses Tailwind responsive utilities.
+- Dashboard includes explicit mobile navigation behavior (`mobileOpen`, mobile menu states).
+- Core flows (auth, dashboard, service operations, appointments, conceptualization) are available in desktop and mobile layouts.
+

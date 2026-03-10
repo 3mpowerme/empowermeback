@@ -770,3 +770,40 @@ Estos endpoints resuelven valores reutilizables por compañía, metadata por ser
 - Soportar mapeos relacionales de rol/servicio/intake
 - Registrar trazabilidad operativa en `dev_androide_17`
 
+
+---
+
+## Análisis funcional por tipo de usuario (Admin vs Ejecutivo)
+
+### Usuario Administrador (capacidades por rol)
+- Visibilidad global de órdenes de servicio.
+- Acceso a módulos protegidos de administración (`services`, `panel`, `companies`, `users`).
+- Gobierno de usuarios y roles:
+  - Consultar listado de usuarios.
+  - Consultar roles disponibles.
+  - Actualizar asignación de roles.
+- Gobierno operativo de servicios:
+  - Configurar servicios habilitados por usuario ejecutivo.
+  - Supervisar cola operativa por empresa/estado.
+
+### Usuario Ejecutivo (capacidades por rol)
+- Acceso acotado al alcance operativo asignado.
+- Cola de trabajo de órdenes de servicio enfocada en asignaciones.
+- Acceso a intakes por servicio/empresa para continuidad operativa.
+- Operaciones de ciclo de vida de la orden (actualización de estado, seguimiento).
+- Gestión de asignación operativa de órdenes.
+
+### Soporte de autoasignación automática de servicios
+La plataforma soporta comportamiento de autoasignación mediante configuración rol-servicio y operaciones de asignación:
+- Elegibilidad de servicios por ejecutivo configurable (`user_services`).
+- Endpoint de asignación disponible para vincular órdenes con ejecutivos (`/api/executive/:serviceOrderId/assigne`).
+- Operativamente, esto habilita flujos de asignación rápida/automática basados en mapeos de servicios habilitados.
+
+> Nota: el comportamiento de asignación se controla por relaciones backend de rol/servicio y registros de asignación de órdenes.
+
+### Soporte de plataforma: Mobile y Desktop
+EmpowerMe tiene soporte responsivo para ambos contextos:
+- **Frontend** con utilidades responsive de Tailwind.
+- Dashboard con manejo explícito de navegación móvil (`mobileOpen`, menú móvil).
+- Flujos core (auth, dashboard, servicios, citas y conceptualización) disponibles en layouts desktop y mobile.
+
