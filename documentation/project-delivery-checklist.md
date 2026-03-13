@@ -1,3 +1,4 @@
+
 # Checklist de Entrega del Proyecto EmpowerMe
 
 _Fecha de actualización: 2026-03-08_
