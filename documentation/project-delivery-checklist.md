@@ -1,3 +1,4 @@
+
 # EmpowerMe Project Delivery Checklist
 
 _Last updated: 2026-03-10_
@@ -931,4 +932,3 @@ EmpowerMe provides responsive support for both device contexts:
 - **Frontend stack** uses Tailwind responsive utilities.
 - Dashboard includes explicit mobile navigation behavior (`mobileOpen`, mobile menu states).
 - Core flows (auth, dashboard, service operations, appointments, conceptualization) are available in desktop and mobile layouts.
-
