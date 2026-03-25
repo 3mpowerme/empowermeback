@@ -94,32 +94,38 @@ export const BuildCompanyController = {
         console.log('today_focus inserted', newRow)
       }
 
-      company_offering.forEach(async (responseId) => {
-        const newRow = await QuestionResponse.createByQuestionTable(
-          'company_offering',
-          company_id,
-          responseId
-        )
-        console.log('company_offering inserted', newRow)
-      })
+      await Promise.all(
+        company_offering.map(async (responseId) => {
+          const newRow = await QuestionResponse.createByQuestionTable(
+            'company_offering',
+            company_id,
+            responseId
+          )
+          console.log('company_offering inserted', newRow)
+        })
+      )
 
-      customer_service_channel.forEach(async (responseId) => {
-        const newRow = await QuestionResponse.createByQuestionTable(
-          'customer_service_channel',
-          company_id,
-          responseId
-        )
-        console.log('customer_service_channel inserted', newRow)
-      })
+      await Promise.all(
+        customer_service_channel.map(async (responseId) => {
+          const newRow = await QuestionResponse.createByQuestionTable(
+            'customer_service_channel',
+            company_id,
+            responseId
+          )
+          console.log('customer_service_channel inserted', newRow)
+        })
+      )
 
-      marketing_source.forEach(async (responseId) => {
-        const newRow = await QuestionResponse.createByQuestionTable(
-          'marketing_source',
-          company_id,
-          responseId
-        )
-        console.log('marketing_source inserted', newRow)
-      })
+      await Promise.all(
+        marketing_source.map(async (responseId) => {
+          const newRow = await QuestionResponse.createByQuestionTable(
+            'marketing_source',
+            company_id,
+            responseId
+          )
+          console.log('marketing_source inserted', newRow)
+        })
+      )
 
       res.status(201).json({
         company_setup_id: id,
