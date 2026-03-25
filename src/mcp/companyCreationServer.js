@@ -3,10 +3,11 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { CompanyCreationMcpService } from '../services/companyCreationMcp.service.js'
+import { AuthMcpService } from '../services/authMcp.service.js'
 
 const server = new McpServer({
   name: 'empowerme-company-creation',
-  version: '1.0.0',
+  version: '1.1.0',
 })
 
 function asText(result) {
@@ -17,8 +18,60 @@ function asText(result) {
         text: JSON.stringify(result, null, 2),
       },
     ],
+    structuredContent: result,
   }
 }
+
+server.registerTool(
+  'auth_signup_email_password',
+  {
+    title: 'Sign up with email and password',
+    description:
+      'Creates a Cognito user plus the local EmpowerMe user linkage required for later company creation.',
+    inputSchema: {
+      email: z.string().email().describe('User email to register.'),
+      password: z.string().min(8).describe('Password that satisfies the backend signup policy.'),
+      countryCode: z.string().length(2).default('CL').describe('Two-letter ISO country code.'),
+    },
+  },
+  async ({ email, password, countryCode }) => {
+    const result = await AuthMcpService.signup({ email, password, countryCode })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'auth_verify_email_code',
+  {
+    title: 'Verify email confirmation code',
+    description: 'Confirms the Cognito email verification code sent during signup.',
+    inputSchema: {
+      email: z.string().email().describe('Registered user email.'),
+      code: z.string().length(6).describe('Six digit email confirmation code.'),
+    },
+  },
+  async ({ email, code }) => {
+    const result = await AuthMcpService.verifyEmail({ email, code })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'auth_login_email_password',
+  {
+    title: 'Login with email and password',
+    description:
+      'Authenticates against Cognito and returns the tokens required to execute company creation.',
+    inputSchema: {
+      email: z.string().email().describe('Registered user email.'),
+      password: z.string().min(8).describe('User password.'),
+    },
+  },
+  async ({ email, password }) => {
+    const result = await AuthMcpService.login({ email, password })
+    return asText(result)
+  }
+)
 
 server.registerTool(
   'company_creation_describe_flow',
