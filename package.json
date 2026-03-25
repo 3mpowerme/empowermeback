@@ -6,6 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
     "start": "node src/server.js",
+    "mcp:company-creation": "node src/mcp/companyCreationServer.js",
+    "validate:company-creation-mcp": "node src/mcp/companyCreationValidationExample.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -19,6 +21,7 @@
     "@aws-sdk/client-ses": "^3.958.0",
     "@aws-sdk/client-sesv2": "^3.958.0",
     "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.3",
@@ -38,7 +41,8 @@
     "npm": "^11.6.0",
     "openai": "^5.23.2",
     "serverless-http": "^4.0.0",
-    "stripe": "^19.1.0"
+    "stripe": "^19.1.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
