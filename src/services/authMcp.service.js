@@ -28,6 +28,16 @@ function validate(schema, input) {
   }
 }
 
+function mapProviderError(error) {
+  return {
+    code: error?.code || error?.name || 'UnknownSignupError',
+    message: error?.message || 'Unknown signup error',
+    statusCode: error?.statusCode || null,
+    retryable: Boolean(error?.retryable),
+    requestId: error?.requestId || null,
+  }
+}
+
 async function ensureDefaultFeatures(userId) {
   const featureIds = [1, 2]
   for (const featureId of featureIds) {
@@ -56,26 +66,47 @@ export const AuthMcpService = {
       return { ok: false, validationErrors: validation.validationErrors }
     }
 
-    const { sub } = await signUp(email, password)
-    const country = await Country.getByCode(countryCode)
-    const countryId = country?.id || 18
-    const existingUser = await UserIdentity.getUserAndUserIdentityByEmail(email)
+    try {
+      const cognitoSignup = await signUp(email, password)
+      const country = await Country.getByCode(countryCode)
+      const countryId = country?.id || 18
+      const existingUser = await UserIdentity.getUserAndUserIdentityByEmail(email)
 
-    let userId = existingUser?.user_id
-    if (!userId) {
-      const createdUser = await User.create(email, countryId)
-      userId = createdUser.id
-    }
+      let userId = existingUser?.user_id
+      if (!userId) {
+        const createdUser = await User.create(email, countryId)
+        userId = createdUser.id
+      }
 
-    await UserIdentity.upsertUser(userId, 'COGNITO', sub)
-    await ensureDefaultFeatures(userId)
+      await UserIdentity.upsertUser(userId, 'COGNITO', cognitoSignup.sub)
+      await ensureDefaultFeatures(userId)
 
-    return {
-      ok: true,
-      email,
-      userId,
-      cognitoSub: sub,
-      nextStep: 'verify_email',
+      const signupEvidence = {
+        createdInCognito: Boolean(cognitoSignup.sub),
+        userConfirmed: Boolean(cognitoSignup.userConfirmed),
+        deliveryIssued: Boolean(cognitoSignup.deliveryIssued),
+        codeDelivery: cognitoSignup.codeDeliveryDetails,
+        provider: cognitoSignup.provider,
+      }
+
+      return {
+        ok: signupEvidence.createdInCognito && (signupEvidence.deliveryIssued || signupEvidence.userConfirmed),
+        email,
+        userId,
+        cognitoSub: cognitoSignup.sub,
+        nextStep: 'verify_email',
+        signupEvidence,
+      }
+    } catch (error) {
+      const providerError = mapProviderError(error)
+      return {
+        ok: false,
+        email,
+        error: providerError.message,
+        errorCode: providerError.code,
+        providerError,
+        validationErrors: [{ message: providerError.message, path: ['signup'], type: providerError.code }],
+      }
     }
   },
 
@@ -85,12 +116,24 @@ export const AuthMcpService = {
       return { ok: false, validationErrors: validation.validationErrors }
     }
 
-    const result = await verifyEmail(email, code)
-    return {
-      ok: true,
-      email,
-      message: result.message,
-      nextStep: 'login',
+    try {
+      const result = await verifyEmail(email, code)
+      return {
+        ok: true,
+        email,
+        message: result.message,
+        nextStep: 'login',
+      }
+    } catch (error) {
+      const providerError = mapProviderError(error)
+      return {
+        ok: false,
+        email,
+        error: providerError.message,
+        errorCode: providerError.code,
+        providerError,
+        validationErrors: [{ message: providerError.message, path: ['verifyEmail'], type: providerError.code }],
+      }
     }
   },
 
@@ -100,28 +143,40 @@ export const AuthMcpService = {
       return { ok: false, validationErrors: validation.validationErrors }
     }
 
-    const cognitoLoginResult = await login(email, password)
-    const cognitoPayload = await validateAccessToken(cognitoLoginResult.accessToken)
-    const cognitoSub = cognitoPayload?.sub
-    const user = {}
+    try {
+      const cognitoLoginResult = await login(email, password)
+      const cognitoPayload = await validateAccessToken(cognitoLoginResult.accessToken)
+      const cognitoSub = cognitoPayload?.sub
+      const user = {}
 
-    if (cognitoSub) {
-      const { userId, userType } = await UserIdentity.getUserIdBySub(cognitoSub)
-      user.userId = userId
-      user.userType = userType
-    }
+      if (cognitoSub) {
+        const { userId, userType } = await UserIdentity.getUserIdBySub(cognitoSub)
+        user.userId = userId
+        user.userType = userType
+      }
 
-    const company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
-    const userHasCompany = Boolean(company)
-    const postLoginRedirect = getPostRedirectUrlByUserType(user.userType, userHasCompany)
+      const company = await UserIdentity.getUserAndCompanyInfoByEmail(email)
+      const userHasCompany = Boolean(company)
+      const postLoginRedirect = getPostRedirectUrlByUserType(user.userType, userHasCompany)
 
-    return {
-      ok: true,
-      email,
-      ...cognitoLoginResult,
-      ...user,
-      postLoginRedirect,
-      companyId: company?.companyId || null,
+      return {
+        ok: true,
+        email,
+        ...cognitoLoginResult,
+        ...user,
+        postLoginRedirect,
+        companyId: company?.companyId || null,
+      }
+    } catch (error) {
+      const providerError = mapProviderError(error)
+      return {
+        ok: false,
+        email,
+        error: providerError.message,
+        errorCode: providerError.code,
+        providerError,
+        validationErrors: [{ message: providerError.message, path: ['login'], type: providerError.code }],
+      }
     }
   },
 }
