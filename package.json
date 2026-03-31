@@ -7,6 +7,7 @@
     "dev": "nodemon",
     "start": "node src/server.js",
     "mcp:company-creation": "node src/mcp/companyCreationServer.js",
+    "mcp:conceptualization-stage1": "node src/mcp/companyCreationServer.js",
     "validate:company-creation-mcp": "node src/mcp/companyCreationValidationExample.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
