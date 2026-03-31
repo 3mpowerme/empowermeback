@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { CompanyCreationMcpService } from '../services/companyCreationMcp.service.js'
+import { ConceptualizationStage1McpService } from '../services/conceptualizationStage1Mcp.service.js'
 import { AuthMcpService } from '../services/authMcp.service.js'
 
 const server = new McpServer({
@@ -188,6 +189,92 @@ server.registerTool(
   async ({ draft, payload, mode, accessToken }) => {
     const result = await CompanyCreationMcpService.finalize({
       draft: draft || {},
+      payload,
+      mode,
+      accessToken,
+    })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'conceptualization_stage1_describe_flow',
+  {
+    title: 'Describe conceptualization stage 1',
+    description:
+      'Returns the mapped conceptualization stage-1 steps, real frontend/backend linkage, and key catalog/id notes up to market analysis.',
+    inputSchema: {},
+  },
+  async () => {
+    return asText({
+      stepOrder: ConceptualizationStage1McpService.stepOrder,
+      steps: ConceptualizationStage1McpService.getStepDefinitions(),
+      constants: ConceptualizationStage1McpService.constants,
+    })
+  }
+)
+
+server.registerTool(
+  'conceptualization_stage1_get_catalogs',
+  {
+    title: 'Get conceptualization stage 1 catalogs',
+    description:
+      'Loads the stage-1 catalogs needed to collect offering service type, business sector, and region.',
+    inputSchema: {
+      catalogs: z
+        .array(z.enum(['offering_service_type', 'business_sector', 'region']))
+        .optional()
+        .describe('Optional stage-1 catalog names. Omit to fetch all supported catalogs.'),
+    },
+  },
+  async ({ catalogs }) => {
+    const result = await ConceptualizationStage1McpService.getCatalogs(catalogs || [])
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'conceptualization_stage1_resolve_catalog_options',
+  {
+    title: 'Resolve conceptualization stage 1 catalog values',
+    description:
+      'Resolves human-friendly stage-1 values into canonical backend ids, with optional free-text business sector support.',
+    inputSchema: {
+      catalog: z.enum(['offering_service_type', 'business_sector', 'region']),
+      values: z.array(z.union([z.string(), z.number()])),
+      allowFreeText: z.boolean().optional(),
+    },
+  },
+  async ({ catalog, values, allowFreeText }) => {
+    const result = await ConceptualizationStage1McpService.resolveCatalogSelections({
+      catalog,
+      values,
+      allowFreeText: allowFreeText || false,
+    })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'conceptualization_stage1_create_market_analysis',
+  {
+    title: 'Create conceptualization stage 1 and market analysis',
+    description:
+      'Validates the real stage-1 payload, normalizes free-text sector handling, and either dry-runs or executes the backend conceptualization create controller.',
+    inputSchema: {
+      payload: z.object({
+        offering_service_type_id: z.union([z.number().int().positive(), z.array(z.number().int().positive()).min(1)]),
+        business_sector_id: z.number().int().positive().optional(),
+        business_sector_other: z.string().max(150).optional(),
+        region_id: z.number().int().positive(),
+        about: z.string().min(10).max(500),
+      }),
+      mode: z.enum(['dry_run', 'execute']).default('dry_run'),
+      accessToken: z.string().optional(),
+    },
+  },
+  async ({ payload, mode, accessToken }) => {
+    const result = await ConceptualizationStage1McpService.execute({
       payload,
       mode,
       accessToken,
