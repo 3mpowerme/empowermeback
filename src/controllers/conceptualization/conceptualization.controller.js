@@ -67,12 +67,16 @@ export const ConceptualizationController = {
     try {
       const OTHERS_BUSINESS_SECTOR_ID = 11
       const {
-        offering_service_type_id,
+        offering_service_type_id: raw_offering_service_type_id,
         region_id,
         business_sector_id,
         business_sector_other,
         about,
       } = req.body
+      // Normalize: backend schema accepts array (frontend compat) but controller needs scalar id
+      const offering_service_type_id = Array.isArray(raw_offering_service_type_id)
+        ? raw_offering_service_type_id[0]
+        : raw_offering_service_type_id
       const sectorId = business_sector_other
         ? OTHERS_BUSINESS_SECTOR_ID
         : business_sector_id

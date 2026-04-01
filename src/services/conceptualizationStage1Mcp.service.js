@@ -169,7 +169,13 @@ export const ConceptualizationStage1McpService = {
 
   validateBackendPayload(payload) {
     const normalized = normalizeStage1Payload(payload)
-    const { error, value } = conceptualizationSchema.validate(normalized, {
+    const backendPayload = {
+      ...normalized,
+      offering_service_type_id: Array.isArray(normalized.offering_service_type_id)
+        ? normalized.offering_service_type_id
+        : [normalized.offering_service_type_id],
+    }
+    const { error, value } = conceptualizationSchema.validate(backendPayload, {
       abortEarly: false,
       stripUnknown: false,
     })
