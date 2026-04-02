@@ -22,40 +22,35 @@ async function getUserFromToken(accessToken) {
 }
 
 async function getOrCreateStripeCustomerByUser(userId, email) {
-  // Try to find an existing billing customer for this user (with or without company)
-  const [[bc]] = await db.query(
+  // 1. Try by user_id directly
+  const [[bcByUser]] = await db.query(
     `SELECT * FROM billing_customers WHERE user_id = ? AND provider = 'stripe' LIMIT 1`,
     [userId]
   )
+  if (bcByUser?.external_customer_id) return bcByUser.external_customer_id
 
-  if (bc?.external_customer_id) return bc.external_customer_id
-
-  // Also try by company
+  // 2. Try by company owned by this user
   const [[bcByCompany]] = await db.query(
     `SELECT bc.* FROM billing_customers bc
      JOIN companies c ON c.id = bc.company_id
      WHERE c.owner_user_id = ? AND bc.provider = 'stripe' LIMIT 1`,
     [userId]
   )
-
   if (bcByCompany?.external_customer_id) return bcByCompany.external_customer_id
 
-  // Create new Stripe customer
+  // 3. Create new Stripe customer
   const customer = await stripe.customers.create({
     email: email || undefined,
     metadata: { user_id: String(userId) },
   })
 
-  // Store — try with user_id column; fallback to company-less insert
-  try {
-    await db.query(
-      `INSERT INTO billing_customers (user_id, provider, external_customer_id) VALUES (?, 'stripe', ?)
-       ON DUPLICATE KEY UPDATE external_customer_id = VALUES(external_customer_id)`,
-      [userId, customer.id]
-    )
-  } catch {
-    // Column may not exist yet — not fatal, customer is created in Stripe
-  }
+  // 4. Store with user_id (company_id = NULL)
+  // The unique key is on (company_id, provider) — with company_id NULL, MySQL allows multiple NULLs
+  await db.query(
+    `INSERT INTO billing_customers (user_id, company_id, provider, external_customer_id)
+     VALUES (?, NULL, 'stripe', ?)`,
+    [userId, customer.id]
+  )
 
   return customer.id
 }
