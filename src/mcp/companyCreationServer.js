@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { CompanyCreationMcpService } from '../services/companyCreationMcp.service.js'
 import { ConceptualizationStage1McpService } from '../services/conceptualizationStage1Mcp.service.js'
 import { AuthMcpService } from '../services/authMcp.service.js'
+import { BrandbookMcpService } from '../services/brandbookMcp.service.js'
 
 const server = new McpServer({
   name: 'empowerme-company-creation',
@@ -279,6 +280,45 @@ server.registerTool(
       mode,
       accessToken,
     })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'brandbook_get_options',
+  {
+    title: 'Get brandbook options',
+    description: 'Generates brand name, slogan and colorimetry options for a conceptualization using AI. Returns 6 options of each.',
+    inputSchema: {
+      offering_service_type_id: z.union([z.number().int().positive(), z.array(z.number().int().positive())]).describe('Offering service type id (scalar or array).'),
+      business_sector_id: z.number().int().positive().describe('Business sector id.'),
+      region_id: z.number().int().positive().describe('Region id.'),
+      about: z.string().min(5).max(500).describe('Business idea description.'),
+    },
+  },
+  async ({ offering_service_type_id, business_sector_id, region_id, about }) => {
+    const result = await BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'brandbook_create',
+  {
+    title: 'Create brandbook',
+    description: 'Creates a brandbook with AI-generated logos based on selected brand name, slogan, colorimetry and logo type.',
+    inputSchema: {
+      brand_name: z.string().min(1).max(500).describe('Selected brand name.'),
+      slogan: z.string().min(1).max(500).describe('Selected slogan.'),
+      logo_type: z.enum(['Basado en iconos', 'Basado en nombre', 'Basado en inicial']).describe('Logo type.'),
+      colorimetry: z.array(z.string()).min(1).describe('Array of hex color codes.'),
+      colorimetry_name: z.string().min(1).describe('Name of the selected colorimetry.'),
+      conceptualization_id: z.number().int().positive().describe('Conceptualization id from stage 1.'),
+      accessToken: z.string().describe('User JWT access token.'),
+    },
+  },
+  async ({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken }) => {
+    const result = await BrandbookMcpService.create({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken })
     return asText(result)
   }
 )
