@@ -7,6 +7,7 @@ import { ConceptualizationStage1McpService } from '../services/conceptualization
 import { AuthMcpService } from '../services/authMcp.service.js'
 import { BrandbookMcpService } from '../services/brandbookMcp.service.js'
 import { UserMcpService } from '../services/userMcp.service.js'
+import { PaymentMcpService } from '../services/paymentMcp.service.js'
 
 const server = new McpServer({
   name: 'empowerme-company-creation',
@@ -366,6 +367,36 @@ server.registerTool(
   },
   async ({ accessToken }) => {
     const result = await UserMcpService.getCompany({ accessToken })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'payment_create_checkout',
+  {
+    title: 'Create Stripe Checkout Session for conceptualization',
+    description: 'Creates a service order and a Stripe Checkout Session for conceptualization payment. Returns the checkout URL and the service order ID.',
+    inputSchema: {
+      accessToken: z.string().describe('User JWT access token.'),
+    },
+  },
+  async ({ accessToken }) => {
+    const result = await PaymentMcpService.createCheckout({ accessToken })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'payment_check_status',
+  {
+    title: 'Check payment status for a service order',
+    description: 'Returns the current payment status of a service order: pending_payment, paid, or failed.',
+    inputSchema: {
+      serviceOrderId: z.number().int().positive().describe('Service order ID to check.'),
+    },
+  },
+  async ({ serviceOrderId }) => {
+    const result = await PaymentMcpService.checkStatus({ serviceOrderId })
     return asText(result)
   }
 )
