@@ -6,6 +6,7 @@ import { CompanyCreationMcpService } from '../services/companyCreationMcp.servic
 import { ConceptualizationStage1McpService } from '../services/conceptualizationStage1Mcp.service.js'
 import { AuthMcpService } from '../services/authMcp.service.js'
 import { BrandbookMcpService } from '../services/brandbookMcp.service.js'
+import { UserMcpService } from '../services/userMcp.service.js'
 
 const server = new McpServer({
   name: 'empowerme-company-creation',
@@ -335,6 +336,36 @@ server.registerTool(
   },
   async ({ brand_book_id, logo_id }) => {
     const result = await BrandbookMcpService.selectLogo({ brand_book_id, logo_id })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'user_get_conceptualizations',
+  {
+    title: 'Get user conceptualizations',
+    description: 'Returns all conceptualizations belonging to the authenticated user.',
+    inputSchema: {
+      accessToken: z.string().describe('User JWT access token.'),
+    },
+  },
+  async ({ accessToken }) => {
+    const result = await UserMcpService.getConceptualizations({ accessToken })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'user_get_company',
+  {
+    title: 'Get user company',
+    description: 'Returns the companies belonging to the authenticated user.',
+    inputSchema: {
+      accessToken: z.string().describe('User JWT access token.'),
+    },
+  },
+  async ({ accessToken }) => {
+    const result = await UserMcpService.getCompany({ accessToken })
     return asText(result)
   }
 )
