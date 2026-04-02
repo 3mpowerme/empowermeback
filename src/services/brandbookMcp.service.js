@@ -24,6 +24,26 @@ function buildMockReq({ body = {}, user = null } = {}) {
 export const BrandbookMcpService = {
   logoTypes: LOGO_TYPES,
 
+  async selectLogo({ brand_book_id, logo_id }) {
+    const req = buildMockReq({
+      body: { logo_id },
+      user: null,
+    })
+    req.params = { id: String(brand_book_id) }
+    const res = buildMockRes()
+
+    await ConceptualizationController.updateLogoBrandBook(req, res)
+
+    if (res._status && res._status !== 200) {
+      return {
+        ok: false,
+        error: res._body?.error || `Backend returned status ${res._status}`,
+      }
+    }
+
+    return { ok: true, updated: res._body }
+  },
+
   async getOptions({ offering_service_type_id, business_sector_id, region_id, about }) {
     const req = buildMockReq({
       body: {

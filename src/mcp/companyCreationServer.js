@@ -323,5 +323,21 @@ server.registerTool(
   }
 )
 
+server.registerTool(
+  'brandbook_select_logo',
+  {
+    title: 'Select favorite logo',
+    description: 'Saves the user\'s chosen logo for a brandbook.',
+    inputSchema: {
+      brand_book_id: z.number().int().positive().describe('Brandbook id.'),
+      logo_id: z.number().int().positive().describe('Selected logo id.'),
+    },
+  },
+  async ({ brand_book_id, logo_id }) => {
+    const result = await BrandbookMcpService.selectLogo({ brand_book_id, logo_id })
+    return asText(result)
+  }
+)
+
 const transport = new StdioServerTransport()
 await server.connect(transport)
