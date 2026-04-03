@@ -70,6 +70,29 @@ export const WebhookController = {
           break
         }
 
+        case 'checkout.session.completed': {
+          // Fired when a Stripe Checkout Session payment is successful
+          const session = event.data.object
+          console.log('[Webhook] checkout.session.completed sessionId:', session.id)
+
+          const serviceOrderId = session.metadata?.service_order_id
+            ? Number(session.metadata.service_order_id)
+            : null
+
+          if (serviceOrderId) {
+            await Billing.markServiceOrderPaid(serviceOrderId)
+            console.log('[Webhook] checkout.session.completed: marked service_order', serviceOrderId, 'as paid')
+            await autoAssignPaidServiceOrder({ serviceOrderId })
+          }
+
+          // Also mark the underlying payment intent as succeeded if present
+          if (session.payment_intent) {
+            await Payment.updatePaymentStatusByPI(session.payment_intent, 'succeeded')
+          }
+
+          break
+        }
+
         case 'payment_intent.payment_failed': {
           const pi = event.data.object
           await Payment.updatePaymentStatusByPI(pi.id, 'failed')
