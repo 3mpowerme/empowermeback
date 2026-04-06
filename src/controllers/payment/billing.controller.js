@@ -17,6 +17,21 @@ export const BillingController = {
         return res.status(404).json({ error: 'Service not found' })
       }
 
+      if (serviceCode === 'conceptualization') {
+        const reusableOrder = await Billing.findReusablePaidServiceOrderByUser({
+          userId,
+          serviceCode,
+        })
+        if (reusableOrder) {
+          return res.json({
+            serviceOrderId: reusableOrder.id,
+            reused: true,
+            alreadyPaid: true,
+            fulfillmentStatus: reusableOrder.fulfillment_status,
+          })
+        }
+      }
+
       if (Array.isArray(items) && items.length) {
         const normalizedItems = []
 

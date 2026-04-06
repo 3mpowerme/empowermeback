@@ -27,6 +27,7 @@ import { ANALYSIS_AND_BUSINESS_PLAN_JSON_OPENAI_SCHEMA } from '../../templates/a
 import { ANALYSIS_AND_BUSINESS_PLAN_JSON_GEMINI_SCHEMA } from '../../templates/analysisAndBusinessPlan.gemini.schema.js'
 import { BusinessCard } from '../../models/businessCard.model.js'
 import { BusinessCardHistory } from '../../models/businessCardHistory.model.js'
+import { Billing } from '../../models/billing.model.js'
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -72,6 +73,7 @@ export const ConceptualizationController = {
         business_sector_id,
         business_sector_other,
         about,
+        service_order_id,
       } = req.body
       // Normalize: backend schema accepts array (frontend compat) but controller needs scalar id
       const offering_service_type_id = Array.isArray(raw_offering_service_type_id)
@@ -85,6 +87,32 @@ export const ConceptualizationController = {
       const sub = req.user.sub
       const { userId } = await UserIdentity.getUserIdBySub(sub)
       const { countryId } = await UserIdentity.getCountryIdBySub(sub)
+      let reusableServiceOrder = null
+
+      if (service_order_id) {
+        const explicitServiceOrder = await Billing.getServiceOrder(service_order_id)
+        if (!explicitServiceOrder) {
+          return res.status(404).json({ error: 'Service order not found' })
+        }
+        if (explicitServiceOrder.requested_by_user_id !== userId) {
+          return res.status(403).json({ error: 'Service order does not belong to the current user' })
+        }
+        if (explicitServiceOrder.service_code !== 'conceptualization') {
+          return res.status(400).json({ error: 'Service order is not for conceptualization' })
+        }
+        if (explicitServiceOrder.payment_status !== 'paid') {
+          return res.status(400).json({ error: 'Service order is not paid' })
+        }
+        if (!['created', 'in_progress'].includes(explicitServiceOrder.fulfillment_status)) {
+          return res.status(400).json({ error: 'Service order is not reusable' })
+        }
+        reusableServiceOrder = explicitServiceOrder
+      } else {
+        reusableServiceOrder = await Billing.findReusablePaidServiceOrderByUser({
+          userId,
+          serviceCode: 'conceptualization',
+        })
+      }
       const { name: countryName } = await Country.getNameById(countryId)
       // attaching the conceptualization to userId not companyId
       /*
@@ -96,6 +124,13 @@ export const ConceptualizationController = {
       const { name: businessSectorName } =
         await BusinessSector.getById(business_sector_id)
       const { name: regionName } = await Region.getById(region_id)
+      if (reusableServiceOrder) {
+        await Billing.updateServiceOrderFulfillmentStatus(
+          reusableServiceOrder.id,
+          'in_progress'
+        )
+      }
+
       const prompt = buildMarketAnalysisPrompt(
         offeringServiceTypeName,
         sectorId === OTHERS_BUSINESS_SECTOR_ID
@@ -159,11 +194,19 @@ export const ConceptualizationController = {
         businessPlanId
       )
 
+      if (reusableServiceOrder) {
+        await Billing.updateServiceOrderFulfillmentStatus(
+          reusableServiceOrder.id,
+          'finished'
+        )
+      }
+
       res.status(201).json({
         market_analysis: data.analisis_de_viabilidad,
         business_plan: data.plan_de_negocios,
         market_analysis_id: marketAnalysisId,
         conceptualization_id,
+        service_order_id: reusableServiceOrder?.id || null,
       })
     } catch (error) {
       res.status(500).json({ error: error.message })

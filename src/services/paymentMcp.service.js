@@ -67,6 +67,23 @@ export const PaymentMcpService = {
       const plan = await Plan.getPlanByCode(SERVICE_CODE)
       if (!plan) return { ok: false, error: 'Plan not found for conceptualization' }
 
+      // Reuse already-paid unfinished order when available
+      const reusableOrder = await Billing.findReusablePaidServiceOrderByUser({
+        userId,
+        serviceCode: SERVICE_CODE,
+      })
+
+      if (reusableOrder) {
+        return {
+          ok: true,
+          reused: true,
+          alreadyPaid: true,
+          serviceOrderId: reusableOrder.id,
+          status: reusableOrder.payment_status,
+          fulfillmentStatus: reusableOrder.fulfillment_status,
+        }
+      }
+
       // Create service order (no company required for conceptualization)
       const so = await Billing.createServiceOrder(
         null, // companyId — null for standalone conceptualization
@@ -128,6 +145,7 @@ export const PaymentMcpService = {
         ok: true,
         serviceOrderId: so.id,
         status: so.payment_status, // 'pending_payment' | 'paid' | 'failed'
+        fulfillmentStatus: so.fulfillment_status,
         paid: so.payment_status === 'paid',
       }
     } catch (err) {

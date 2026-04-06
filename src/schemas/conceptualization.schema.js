@@ -2,6 +2,7 @@ import Joi from 'joi'
 
 export const conceptualizationSchema = Joi.object({
   company_id: Joi.number().integer().positive(),
+  service_order_id: Joi.number().integer().positive().optional(),
   offering_service_type_id: Joi.array()
     .items(Joi.number().integer().positive().required())
     .min(1)
