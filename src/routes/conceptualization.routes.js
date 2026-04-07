@@ -24,11 +24,21 @@ router.post(
   validate(brandBookSchema),
   ConceptualizationController.createBrandBook
 )
+router.post(
+  '/brand-book-gemini',
+  validate(brandBookSchema),
+  ConceptualizationController.createBrandBookGemini
+)
 
 router.post(
   '/logo',
   validate(logoSchema),
   ConceptualizationController.createLogos
+)
+router.post(
+  '/logo-gemini',
+  validate(logoSchema),
+  ConceptualizationController.createLogosGemini
 )
 
 router.get(
@@ -57,6 +67,11 @@ router.post(
   '/business-card-mockups/:id',
   validate(businessPlanSchema),
   ConceptualizationController.createBusinessCardMockups
+)
+router.post(
+  '/business-card-mockups-gemini/:id',
+  validate(businessPlanSchema),
+  ConceptualizationController.createBusinessCardMockupsGemini
 )
 
 router.post(

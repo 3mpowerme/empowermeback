@@ -19,6 +19,7 @@ import { Logo } from '../../models/logo.model.js'
 import { LogoHistory } from '../../models/logoHistory.model.js'
 import { BusinessPlan } from '../../models/businessPlan.model.js'
 import { generateStructuredJson } from '../../services/ai/index.js'
+import { GeminiImageService } from '../../services/geminiImage.service.js'
 import { MARKET_ANALYSIS_JSON_OPENAI_SCHEMA } from '../../templates/marketAnalysis.openai.schema.js'
 import { MARKET_ANALYSIS_JSON_GEMINI_SCHEMA } from '../../templates/marketAnalysis.gemini.schema.js'
 import { Country } from '../../models/country.model.js'
@@ -406,6 +407,231 @@ export const ConceptualizationController = {
       res.status(201).json({ logos: insertedLogos })
     } catch (error) {
       res.status(500).json({ error: error.message })
+    }
+  },
+
+  async createBrandBookGemini(req, res) {
+    try {
+      const {
+        brand_name,
+        slogan,
+        logo_type,
+        colorimetry,
+        colorimetry_name,
+        conceptualization_id,
+      } = req.body
+
+      const prompt = `
+        Diseña un logo minimalista y moderno para una marca llamada "${brand_name}".
+        El eslogan es: "${slogan}".
+        Tipo de logo: ${logo_type}.
+        Usa una paleta de colores basada en estos códigos hexadecimales: ${colorimetry.join(', ')}.
+        El fondo debe ser blanco o transparente.
+      `
+
+      const imageResponse = await GeminiImageService.generateImages({
+        prompt,
+        count: 5,
+      })
+
+      const logos = []
+      for (let i = 0; i < imageResponse.data.length; i++) {
+        const imgData = imageResponse.data[i]
+        const imageBase64 = imgData.b64_json
+        if (!imageBase64) continue
+        const buffer = Buffer.from(imageBase64, 'base64')
+        const fileNameSafe = `${brand_name}`.replace(/[^a-zA-Z0-9-_]+/g, '_')
+        const fileName = `logos/${fileNameSafe}_${Date.now()}_${i + 1}.png`
+        const s3Result = await s3
+          .upload({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: fileName,
+            Body: buffer,
+            ContentType: 'image/png',
+          })
+          .promise()
+        logos.push(s3Result.Location)
+      }
+
+      const insertedLogos = await Promise.all(logos.map((url) => Logo.create(url)))
+      await Promise.all(
+        insertedLogos.map(({ id: logo_id }) =>
+          LogoHistory.create('conceptualization', logo_id, conceptualization_id)
+        )
+      )
+      const { id: colorimetry_id } = await Colorimetry.create(
+        ...colorimetry,
+        colorimetry_name
+      )
+      const { id: brand_book_id } = await BrandBook.create(
+        brand_name,
+        slogan,
+        colorimetry_id
+      )
+      await Conceptualization.updateBrandBookId(
+        conceptualization_id,
+        brand_book_id
+      )
+      res.status(201).json({ logos: insertedLogos, brand_book_id })
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  async createLogosGemini(req, res) {
+    try {
+      const {
+        offering_service_type_id,
+        business_sector_id,
+        about,
+        brand_name,
+        logo_type,
+      } = req.body
+
+      const sub = req.user.sub
+      const { userId } = await UserIdentity.getUserIdBySub(sub)
+      const companyResult = await Company.getCompanyIdByUserId(userId)
+      const { id: companyId } = companyResult
+      const { name: offeringServiceTypeName } =
+        await OfferingServiceType.getById(offering_service_type_id)
+      const { name: businessSectorName } =
+        await BusinessSector.getById(business_sector_id)
+      const prompt = `
+        Diseña un logo minimalista y moderno para una marca llamada "${brand_name}".
+        Tipo de logo: ${logo_type}.
+        Tipo de servicio: ${offeringServiceTypeName}
+        Sector: ${businessSectorName}.
+        Acerca de la empresa: ${about}
+        El fondo debe ser blanco o transparente.
+      `
+
+      const imageResponse = await GeminiImageService.generateImages({
+        prompt,
+        count: 1,
+      })
+
+      const logos = []
+      for (let i = 0; i < imageResponse.data.length; i++) {
+        const imgData = imageResponse.data[i]
+        const imageBase64 = imgData.b64_json
+        if (!imageBase64) continue
+        const buffer = Buffer.from(imageBase64, 'base64')
+        const fileNameSafe = `${brand_name}`.replace(/[^a-zA-Z0-9-_]+/g, '_')
+        const fileName = `logos/${fileNameSafe}_${Date.now()}_${i + 1}.png`
+        const s3Result = await s3
+          .upload({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: fileName,
+            Body: buffer,
+            ContentType: 'image/png',
+          })
+          .promise()
+        logos.push(s3Result.Location)
+      }
+      const insertedLogos = await Promise.all(logos.map((url) => Logo.create(url)))
+      await Promise.all(
+        insertedLogos.map(({ id: logo_id }) =>
+          LogoHistory.create('company', logo_id, companyId)
+        )
+      )
+      res.status(201).json({ logos: insertedLogos })
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  async createBusinessCardMockupsGemini(req, res) {
+    try {
+      const {
+        offering_service_type_id,
+        region_id,
+        business_sector_id,
+        about,
+        brand_book_id,
+      } = req.body || {}
+      const { id: conceptualization_id } = req.params
+
+      const sub = req.user.sub
+      const { userId } = await UserIdentity.getUserIdBySub(sub)
+      const { countryId } = await UserIdentity.getCountryIdBySub(sub)
+      const { name: countryName } = await Country.getNameById(countryId)
+      const { name: offeringServiceTypeName } = await OfferingServiceType.getById(offering_service_type_id)
+      const { name: businessSectorName } = await BusinessSector.getById(business_sector_id)
+      const { name: regionName } = await Region.getById(region_id)
+      const brandBook = await BrandBook.getById(brand_book_id)
+      const { brand_name, slogan, color_1, color_2, color_3, color_4, color_5, color_6 } = brandBook
+
+      const conceptPrompt = `
+Eres un director creativo senior especializado en identidad corporativa para pymes en ${countryName}.
+Genera 1 propuestas distintas de tarjeta de presentación profesional para un negocio con estas características:
+- Tipo de servicio: ${offeringServiceTypeName}
+- Sector: ${businessSectorName}
+- Región/localización: ${regionName}
+- Descripción del negocio: ${about}
+- Nombre de la marca: ${brand_name}
+- Slogan: ${slogan}
+- Paleta de colores: ${color_1} ${color_2} ${color_3} ${color_4} ${color_5} ${color_6}
+Devuélvelo EXCLUSIVAMENTE en formato JSON válido con {"proposals":[{"tagline":"...","color_palette":["#HEX"],"style_notes":"...","front_layout":"...","back_layout":"..."}]}
+      `.trim()
+
+      const conceptResponse = await openai.chat.completions.create({
+        model: 'gpt-4.1-mini',
+        messages: [
+          { role: 'system', content: 'Responde únicamente en JSON válido. No incluyas explicaciones externas.' },
+          { role: 'user', content: conceptPrompt },
+        ],
+        temperature: 0.4,
+      })
+      const conceptJsonRaw = conceptResponse?.choices?.[0]?.message?.content || '{}'
+      const conceptJson = JSON.parse(conceptJsonRaw)
+      const proposals = Array.isArray(conceptJson.proposals) ? conceptJson.proposals : []
+      if (!proposals.length) {
+        return res.status(500).json({ message: 'AI did not return proposals' })
+      }
+
+      const mockupItems = []
+      for (let i = 0; i < proposals.length; i++) {
+        const proposal = proposals[i]
+        const frontPrompt = `Diseña la vista FRONTAL de una tarjeta de presentación corporativa. Estilo general: ${proposal.style_notes}. Paleta: ${proposal.color_palette.join(', ')}. Contexto: ${about}. Región objetivo: ${regionName}, ${countryName}. Layout: ${proposal.front_layout}. La tarjeta debe parecer realista en mockup 3D sobre superficie limpia, luz suave. Formato horizontal profesional. No incluyas marcas de agua.`
+        const backPrompt = `Diseña la vista TRASERA de la misma tarjeta de presentación corporativa. Estilo general: ${proposal.style_notes}. Paleta: ${proposal.color_palette.join(', ')}. Tagline: ${proposal.tagline}. Layout: ${proposal.back_layout}. Mockup 3D similar, misma tarjeta física, formato horizontal profesional, sin marcas de agua, textos en español.`
+
+        const frontImageResp = await GeminiImageService.generateImages({ prompt: frontPrompt, count: 1 })
+        const frontBuffer = Buffer.from(frontImageResp.data[0].b64_json, 'base64')
+        const frontFileKey = `business_cards/business_card_front_user_${userId}_${Date.now()}_${i + 1}_front.png`
+        const frontS3 = await s3.upload({ Bucket: process.env.AWS_S3_BUCKET, Key: frontFileKey, Body: frontBuffer, ContentType: 'image/png' }).promise()
+
+        const backImageResp = await GeminiImageService.generateImages({ prompt: backPrompt, count: 1 })
+        const backBuffer = Buffer.from(backImageResp.data[0].b64_json, 'base64')
+        const backFileKey = `business_cards/business_card_back_user_${userId}_${Date.now()}_${i + 1}_back.png`
+        const backS3 = await s3.upload({ Bucket: process.env.AWS_S3_BUCKET, Key: backFileKey, Body: backBuffer, ContentType: 'image/png' }).promise()
+
+        const business_card_front = await BusinessCard.create(frontS3.Location)
+        const business_card_back = await BusinessCard.create(backS3.Location)
+        const businessCardHistory = await BusinessCardHistory.create(
+          'conceptualization',
+          business_card_front.id,
+          business_card_back.id,
+          conceptualization_id,
+          0,
+          proposal.tagline,
+          JSON.stringify(proposal.color_palette),
+          proposal.style_notes
+        )
+        mockupItems.push({
+          history_id: businessCardHistory.id,
+          tagline: proposal.tagline,
+          color_palette: proposal.color_palette,
+          style_notes: proposal.style_notes,
+          front: { url: frontS3.Location, id: business_card_front.id },
+          back: { url: backS3.Location, id: business_card_back.id },
+          chosen: false,
+        })
+      }
+
+      return res.status(201).json({ mockups: mockupItems })
+    } catch (error) {
+      console.error('Error in createBusinessCardMockupsGemini:', error)
+      return res.status(500).json({ error: error.message })
     }
   },
 
