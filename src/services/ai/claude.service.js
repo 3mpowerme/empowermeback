@@ -15,7 +15,9 @@ function extractJson(str) {
   try {
     return JSON.parse(str.trim())
   } catch {}
-  throw new Error('Claude.generateStructuredJson: could not parse JSON response')
+  throw new Error(
+    'Claude.generateStructuredJson: could not parse JSON response'
+  )
 }
 
 /**
@@ -37,7 +39,7 @@ export const Claude = {
       throw new Error('generateStructuredJson: invalid jsonSchema')
 
     const {
-      model = process.env.ANTHROPIC_MODEL || 'claude-opus-4-5',
+      model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
       temperature = 0.3,
       max_output_tokens = 16000,
       timeoutMs = 300000,
@@ -53,7 +55,8 @@ export const Claude = {
       tools: [
         {
           name: schemaName,
-          description: 'Generate structured JSON analysis following the provided schema exactly.',
+          description:
+            'Generate structured JSON analysis following the provided schema exactly.',
           input_schema: toolSchema,
         },
       ],
@@ -77,7 +80,8 @@ export const Claude = {
             input_tokens: response.usage.input_tokens,
             output_tokens: response.usage.output_tokens,
             total_tokens:
-              (response.usage.input_tokens || 0) + (response.usage.output_tokens || 0),
+              (response.usage.input_tokens || 0) +
+              (response.usage.output_tokens || 0),
           }
         : {}
       return { data, usage }
