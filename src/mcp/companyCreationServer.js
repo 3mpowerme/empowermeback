@@ -267,6 +267,7 @@ server.registerTool(
     inputSchema: {
       payload: z.object({
         offering_service_type_id: z.union([z.number().int().positive(), z.array(z.number().int().positive()).min(1)]),
+        service_order_id: z.number().int().positive().optional(),
         business_sector_id: z.number().int().positive().optional(),
         business_sector_other: z.string().max(150).optional(),
         region_id: z.number().int().positive(),

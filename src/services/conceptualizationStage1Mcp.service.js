@@ -34,6 +34,7 @@ const STEP_DEFINITIONS = {
 
 const STAGE1_DRAFT_SCHEMA = Joi.object({
   offering_service_type_id: Joi.number().integer().positive().required(),
+  service_order_id: Joi.number().integer().positive().optional(),
   business_sector_id: Joi.number().integer().positive(),
   business_sector_other: Joi.string().trim().max(150).allow(''),
   region_id: Joi.number().integer().positive().required(),
