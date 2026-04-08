@@ -77,7 +77,9 @@ export const ConceptualizationController = {
         service_order_id,
       } = req.body
       // Normalize: backend schema accepts array (frontend compat) but controller needs scalar id
-      const offering_service_type_id = Array.isArray(raw_offering_service_type_id)
+      const offering_service_type_id = Array.isArray(
+        raw_offering_service_type_id
+      )
         ? raw_offering_service_type_id[0]
         : raw_offering_service_type_id
       const sectorId = business_sector_other
@@ -91,28 +93,41 @@ export const ConceptualizationController = {
       let reusableServiceOrder = null
 
       if (service_order_id) {
-        const explicitServiceOrder = await Billing.getServiceOrder(service_order_id)
+        const explicitServiceOrder =
+          await Billing.getServiceOrder(service_order_id)
         if (!explicitServiceOrder) {
           return res.status(404).json({ error: 'Service order not found' })
         }
         if (explicitServiceOrder.requested_by_user_id !== userId) {
-          return res.status(403).json({ error: 'Service order does not belong to the current user' })
+          return res.status(403).json({
+            error: 'Service order does not belong to the current user',
+          })
         }
         if (explicitServiceOrder.service_code !== 'conceptualization') {
-          return res.status(400).json({ error: 'Service order is not for conceptualization' })
+          return res
+            .status(400)
+            .json({ error: 'Service order is not for conceptualization' })
         }
         if (explicitServiceOrder.payment_status !== 'paid') {
           return res.status(400).json({ error: 'Service order is not paid' })
         }
-        if (!['created', 'in_progress'].includes(explicitServiceOrder.fulfillment_status)) {
-          return res.status(400).json({ error: 'Service order is not reusable' })
+        if (
+          !['created', 'in_progress'].includes(
+            explicitServiceOrder.fulfillment_status
+          )
+        ) {
+          return res
+            .status(400)
+            .json({ error: 'Service order is not reusable' })
         }
         reusableServiceOrder = explicitServiceOrder
       } else {
-        reusableServiceOrder = await Billing.findReusablePaidServiceOrderByUser({
-          userId,
-          serviceCode: 'conceptualization',
-        })
+        reusableServiceOrder = await Billing.findReusablePaidServiceOrderByUser(
+          {
+            userId,
+            serviceCode: 'conceptualization',
+          }
+        )
       }
       const { name: countryName } = await Country.getNameById(countryId)
       // attaching the conceptualization to userId not companyId
@@ -496,7 +511,9 @@ export const ConceptualizationController = {
         logos.push(s3Result.Location)
       }
 
-      const insertedLogos = await Promise.all(logos.map((url) => Logo.create(url)))
+      const insertedLogos = await Promise.all(
+        logos.map((url) => Logo.create(url))
+      )
       await Promise.all(
         insertedLogos.map(({ id: logo_id }) =>
           LogoHistory.create('conceptualization', logo_id, conceptualization_id)
@@ -571,7 +588,9 @@ export const ConceptualizationController = {
           .promise()
         logos.push(s3Result.Location)
       }
-      const insertedLogos = await Promise.all(logos.map((url) => Logo.create(url)))
+      const insertedLogos = await Promise.all(
+        logos.map((url) => Logo.create(url))
+      )
       await Promise.all(
         insertedLogos.map(({ id: logo_id }) =>
           LogoHistory.create('company', logo_id, companyId)
@@ -598,15 +617,28 @@ export const ConceptualizationController = {
       const { userId } = await UserIdentity.getUserIdBySub(sub)
       const { countryId } = await UserIdentity.getCountryIdBySub(sub)
       const { name: countryName } = await Country.getNameById(countryId)
-      const { name: offeringServiceTypeName } = await OfferingServiceType.getById(offering_service_type_id)
-      const { name: businessSectorName } = await BusinessSector.getById(business_sector_id)
+      const { name: offeringServiceTypeName } =
+        await OfferingServiceType.getById(offering_service_type_id)
+      const { name: businessSectorName } =
+        await BusinessSector.getById(business_sector_id)
       const { name: regionName } = await Region.getById(region_id)
       const brandBook = await BrandBook.getById(brand_book_id)
-      const { brand_name, slogan, color_1, color_2, color_3, color_4, color_5, color_6 } = brandBook
+      const {
+        brand_name,
+        slogan,
+        color_1,
+        color_2,
+        color_3,
+        color_4,
+        color_5,
+        color_6,
+      } = brandBook
 
+      const mockupsCount = 1
       const conceptPrompt = `
 Eres un director creativo senior especializado en identidad corporativa para pymes en ${countryName}.
-Genera 1 propuestas distintas de tarjeta de presentación profesional para un negocio con estas características:
+Genera ${mockupsCount} propuestas distintas de tarjeta de presentación profesional para un negocio con estas características:
+
 - Tipo de servicio: ${offeringServiceTypeName}
 - Sector: ${businessSectorName}
 - Región/localización: ${regionName}
@@ -614,39 +646,139 @@ Genera 1 propuestas distintas de tarjeta de presentación profesional para un ne
 - Nombre de la marca: ${brand_name}
 - Slogan: ${slogan}
 - Paleta de colores: ${color_1} ${color_2} ${color_3} ${color_4} ${color_5} ${color_6}
-Devuélvelo EXCLUSIVAMENTE en formato JSON válido con {"proposals":[{"tagline":"...","color_palette":["#HEX"],"style_notes":"...","front_layout":"...","back_layout":"..."}]}
-      `.trim()
+
+Para cada propuesta quiero un objeto JSON con:
+- "tagline": una frase corta y profesional adaptada al mercado local (${regionName}, ${countryName})
+- "color_palette": un arreglo de 3 a 5 colores en HEX (por ejemplo ["#000000","#FFFFFF","#FFB800"])
+- "style_notes": una descripción breve del estilo visual de la tarjeta (ej: "minimalista premium", "moderno tech azul eléctrico", etc.)
+- "front_layout": texto descriptivo de cómo se vería el frente (logo placeholder, nombre, rol, contacto)
+- "back_layout": texto descriptivo de cómo se vería el reverso (slogan, servicios clave, QR, etc.)
+
+Devuélvelo EXCLUSIVAMENTE en formato JSON válido, sin comentarios ni markdown, con la forma:
+{
+  "proposals": [
+    {
+      "tagline": "...",
+      "color_palette": ["#HEX", "..."],
+      "style_notes": "...",
+      "front_layout": "...",
+      "back_layout": "..."
+    }
+  ]
+}
+    `.trim()
 
       const conceptResponse = await openai.chat.completions.create({
         model: 'gpt-4.1-mini',
         messages: [
-          { role: 'system', content: 'Responde únicamente en JSON válido. No incluyas explicaciones externas.' },
+          {
+            role: 'system',
+            content:
+              'Responde únicamente en JSON válido. No incluyas explicaciones externas.',
+          },
           { role: 'user', content: conceptPrompt },
         ],
         temperature: 0.4,
       })
-      const conceptJsonRaw = conceptResponse?.choices?.[0]?.message?.content || '{}'
-      const conceptJson = JSON.parse(conceptJsonRaw)
-      const proposals = Array.isArray(conceptJson.proposals) ? conceptJson.proposals : []
+
+      const conceptJsonRaw =
+        conceptResponse?.choices?.[0]?.message?.content || '{}'
+
+      let conceptJson
+      try {
+        conceptJson = JSON.parse(conceptJsonRaw)
+      } catch (err) {
+        console.error('Error parsing concept JSON', err, conceptJsonRaw)
+        return res.status(500).json({
+          message:
+            'Error parsing mockup concept response from AI. (Invalid JSON)',
+        })
+      }
+      const proposals = Array.isArray(conceptJson.proposals)
+        ? conceptJson.proposals
+        : []
       if (!proposals.length) {
         return res.status(500).json({ message: 'AI did not return proposals' })
       }
 
+      console.log('proposals', proposals)
+
       const mockupItems = []
       for (let i = 0; i < proposals.length; i++) {
         const proposal = proposals[i]
-        const frontPrompt = `Diseña la vista FRONTAL de una tarjeta de presentación corporativa. Estilo general: ${proposal.style_notes}. Paleta: ${proposal.color_palette.join(', ')}. Contexto: ${about}. Región objetivo: ${regionName}, ${countryName}. Layout: ${proposal.front_layout}. La tarjeta debe parecer realista en mockup 3D sobre superficie limpia, luz suave. Formato horizontal profesional. No incluyas marcas de agua.`
-        const backPrompt = `Diseña la vista TRASERA de la misma tarjeta de presentación corporativa. Estilo general: ${proposal.style_notes}. Paleta: ${proposal.color_palette.join(', ')}. Tagline: ${proposal.tagline}. Layout: ${proposal.back_layout}. Mockup 3D similar, misma tarjeta física, formato horizontal profesional, sin marcas de agua, textos en español.`
 
-        const frontImageResp = await GeminiImageService.generateImages({ prompt: frontPrompt, count: 1 })
-        const frontBuffer = Buffer.from(frontImageResp.data[0].b64_json, 'base64')
+        const frontPrompt = `
+Diseña la vista FRONTAL de una tarjeta de presentación corporativa.
+Estilo general: ${proposal.style_notes}.
+Paleta de color (usa estos colores como base): ${proposal.color_palette.join(', ')}.
+Contexto de marca: ${about}.
+Región objetivo: ${regionName}, ${countryName}.
+
+⚠️ LOGO PLACEHOLDER (OBLIGATORIO):
+Muestra un LOGO DE PRUEBA/PLACEHOLDER claramente identificable en el área destinada al logo.
+Debe ser un recuadro o forma simple (rectángulo/círculo) en gris claro (#CCCCCC ~ #E5E7EB),
+con la palabra "LOGO" centrada (tipografía simple, contraste legible).
+No inventes ni dibujes un logo real, solo el marcador de posición integrado al diseño.
+
+Layout deseado:
+${proposal.front_layout}
+
+La tarjeta debe parecer realista en mockup 3D sobre superficie limpia, luz suave.
+Formato horizontal, tarjeta estándar profesional.
+No incluyas marcas de agua ni texto "mockup".
+      `.trim()
+
+        const backPrompt = `
+Diseña la vista TRASERA de la misma tarjeta de presentación corporativa.
+Debe hacer match con el frente (misma identidad).
+Estilo general: ${proposal.style_notes}.
+Paleta de color (misma base): ${proposal.color_palette.join(', ')}.
+Tagline / frase clave: "${proposal.tagline}".
+
+Si existe un área de logo en el reverso, mantén el mismo LOGO PLACEHOLDER:
+un marcador en gris claro con la palabra "LOGO" centrada (no inventar logotipo real).
+
+Layout deseado:
+${proposal.back_layout}
+
+Mockup 3D similar, misma tarjeta física, mostrando el reverso.
+Formato horizontal profesional.
+No incluyas marcas de agua ni texto "mockup".
+Todos los textos deben de estar en español
+      `.trim()
+
+        const frontImageResp = await GeminiImageService.generateImages({
+          prompt: frontPrompt,
+          count: 1,
+        })
+        const frontBuffer = Buffer.from(
+          frontImageResp.data[0].b64_json,
+          'base64'
+        )
         const frontFileKey = `business_cards/business_card_front_user_${userId}_${Date.now()}_${i + 1}_front.png`
-        const frontS3 = await s3.upload({ Bucket: process.env.AWS_S3_BUCKET, Key: frontFileKey, Body: frontBuffer, ContentType: 'image/png' }).promise()
+        const frontS3 = await s3
+          .upload({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: frontFileKey,
+            Body: frontBuffer,
+            ContentType: 'image/png',
+          })
+          .promise()
 
-        const backImageResp = await GeminiImageService.generateImages({ prompt: backPrompt, count: 1 })
+        const backImageResp = await GeminiImageService.generateImages({
+          prompt: backPrompt,
+          count: 1,
+        })
         const backBuffer = Buffer.from(backImageResp.data[0].b64_json, 'base64')
         const backFileKey = `business_cards/business_card_back_user_${userId}_${Date.now()}_${i + 1}_back.png`
-        const backS3 = await s3.upload({ Bucket: process.env.AWS_S3_BUCKET, Key: backFileKey, Body: backBuffer, ContentType: 'image/png' }).promise()
+        const backS3 = await s3
+          .upload({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: backFileKey,
+            Body: backBuffer,
+            ContentType: 'image/png',
+          })
+          .promise()
 
         const business_card_front = await BusinessCard.create(frontS3.Location)
         const business_card_back = await BusinessCard.create(backS3.Location)
