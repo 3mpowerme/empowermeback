@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { ConceptualizationController } from '../controllers/conceptualization/conceptualization.controller.js'
+import { ConceptualizationClaudeController } from '../controllers/conceptualization/conceptualizationClaude.controller.js'
 import { validate } from '../middlewares/validate.middleware.js'
 import { conceptualizationSchema } from '../schemas/conceptualization.schema.js'
 import {
@@ -39,7 +40,7 @@ router.get(
 router.post(
   '/',
   validate(conceptualizationSchema),
-  ConceptualizationController.create
+  ConceptualizationClaudeController.create
 )
 router.put(
   '/brand-book/:id',
