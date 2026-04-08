@@ -84,6 +84,33 @@ export const Billing = {
     return row
   },
 
+  async findReusablePaidServiceOrderByUser({ userId, serviceCode }) {
+    const [[row]] = await db.query(
+      `
+      SELECT
+        so.*,
+        s.code AS service_code
+      FROM service_orders so
+      JOIN services s ON s.id = so.service_id
+      WHERE so.requested_by_user_id = ?
+        AND s.code = ?
+        AND so.payment_status = 'paid'
+        AND so.fulfillment_status IN ('created', 'in_progress')
+      ORDER BY so.created_at DESC, so.id DESC
+      LIMIT 1
+      `,
+      [userId, serviceCode]
+    )
+    return row || null
+  },
+
+  async updateServiceOrderFulfillmentStatus(serviceOrderId, fulfillmentStatus) {
+    await db.query(
+      `UPDATE service_orders SET fulfillment_status = ? WHERE id = ?`,
+      [fulfillmentStatus, serviceOrderId]
+    )
+  },
+
   async createServiceOrder(
     companyId,
     serviceId,

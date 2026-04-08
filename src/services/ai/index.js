@@ -1,9 +1,11 @@
 import { Gemini } from './gemini.service.js'
 import { OpenAI } from './openai.service.js'
+import { Claude } from './claude.service.js'
 
 const REGISTRY = {
   openai: OpenAI,
   gemini: Gemini,
+  claude: Claude,
 }
 
 export function createAIProvider(options = {}) {
