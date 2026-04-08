@@ -1,12 +1,13 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const GEMINI_IMAGE_MODEL =
-  process.env.GEMINI_IMAGE_MODEL || 'gemini-2.0-flash-exp-image-generation'
+  process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image'
 
 function extractBase64Images(responseJson) {
-  const parts = responseJson?.candidates?.flatMap((candidate) => candidate?.content?.parts || []) || []
-  return parts
-    .map((part) => part?.inlineData?.data || null)
-    .filter(Boolean)
+  const parts =
+    responseJson?.candidates?.flatMap(
+      (candidate) => candidate?.content?.parts || []
+    ) || []
+  return parts.map((part) => part?.inlineData?.data || null).filter(Boolean)
 }
 
 export const GeminiImageService = {
@@ -31,7 +32,9 @@ export const GeminiImageService = {
 
       if (!response.ok) {
         const text = await response.text()
-        throw new Error(`Gemini image generation failed: ${response.status} ${text}`)
+        throw new Error(
+          `Gemini image generation failed: ${response.status} ${text}`
+        )
       }
 
       const json = await response.json()
