@@ -22,12 +22,14 @@ export const UserMcpService = {
       return {
         ok: true,
         conceptualizations: rows.map((row) => ({
-          id: row.id,
+          id: row.conceptualization_id || row.id || null,
           about: row.about || null,
           offering_service_type_id: row.offering_service_type_id || null,
           business_sector_id: row.business_sector_id || null,
           region_id: row.region_id || null,
-          created_at: row.created_at || null,
+          market_analysis_id: row.market_analysis_id || null,
+          brand_book_id: row.brand_book_id || null,
+          created_at: row.conceptualization_created_at || row.created_at || null,
         })),
       }
     } catch (err) {
