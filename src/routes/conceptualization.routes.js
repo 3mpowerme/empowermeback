@@ -50,7 +50,7 @@ router.get(
 router.post(
   '/',
   validate(conceptualizationSchema),
-  ConceptualizationController.create
+  ConceptualizationClaudeController.create
 )
 router.put(
   '/brand-book/:id',
