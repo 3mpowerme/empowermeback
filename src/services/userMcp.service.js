@@ -3,6 +3,18 @@ import { UserIdentity } from '../models/userIdentity.model.js'
 import { Conceptualization } from '../models/conceptualization.model.js'
 import { Company } from '../models/company.model.js'
 
+function parseJsonOrNull(value) {
+  if (value == null) return null
+  if (typeof value === 'object') return value
+  if (typeof value !== 'string') return null
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
 async function getUserIdFromToken(accessToken) {
   if (!accessToken) throw new Error('accessToken is required')
   const token = accessToken.startsWith('Bearer ') ? accessToken.slice(7) : accessToken
@@ -30,6 +42,8 @@ export const UserMcpService = {
           market_analysis_id: row.market_analysis_id || null,
           brand_book_id: row.brand_book_id || null,
           created_at: row.conceptualization_created_at || row.created_at || null,
+          market_analysis: parseJsonOrNull(row.market_analysis_raw_result),
+          business_plan: parseJsonOrNull(row.business_plan_raw_result),
         })),
       }
     } catch (err) {
