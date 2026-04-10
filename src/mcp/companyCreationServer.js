@@ -22,7 +22,6 @@ function asText(result) {
         text: JSON.stringify(result, null, 2),
       },
     ],
-    structuredContent: result,
   }
 }
 
@@ -223,12 +222,12 @@ server.registerTool(
     title: 'Get conceptualization stage 1 catalogs',
     description:
       'Loads the stage-1 catalogs needed to collect offering service type, business sector, and region.',
-    inputSchema: {
+    inputSchema: z.object({
       catalogs: z
         .array(z.enum(['offering_service_type', 'business_sector', 'region']))
         .optional()
         .describe('Optional stage-1 catalog names. Omit to fetch all supported catalogs.'),
-    },
+    }),
   },
   async ({ catalogs }) => {
     const result = await ConceptualizationStage1McpService.getCatalogs(catalogs || [])
@@ -242,11 +241,11 @@ server.registerTool(
     title: 'Resolve conceptualization stage 1 catalog values',
     description:
       'Resolves human-friendly stage-1 values into canonical backend ids, with optional free-text business sector support.',
-    inputSchema: {
+    inputSchema: z.object({
       catalog: z.enum(['offering_service_type', 'business_sector', 'region']),
       values: z.array(z.union([z.string(), z.number()])),
       allowFreeText: z.boolean().optional(),
-    },
+    }),
   },
   async ({ catalog, values, allowFreeText }) => {
     const result = await ConceptualizationStage1McpService.resolveCatalogSelections({
@@ -402,5 +401,47 @@ server.registerTool(
   }
 )
 
-const transport = new StdioServerTransport()
-await server.connect(transport)
+async function runSingleToolCall() {
+  const idx = process.argv.indexOf('--tool-call')
+  if (idx === -1) return false
+
+  const raw = process.argv[idx + 1]
+  const payload = raw ? JSON.parse(raw) : {}
+  const name = payload.name
+  const args = payload.arguments || {}
+
+  const handlers = {
+    auth_signup_email_password: ({ email, password, countryCode }) => AuthMcpService.signup({ email, password, countryCode }),
+    auth_verify_email_code: ({ email, code }) => AuthMcpService.verifyEmail({ email, code }),
+    auth_login_email_password: ({ email, password }) => AuthMcpService.login({ email, password }),
+    conceptualization_stage1_get_catalogs: ({ catalogs }) => ConceptualizationStage1McpService.getCatalogs(catalogs || []),
+    conceptualization_stage1_resolve_catalog_options: ({ catalog, values, allowFreeText }) => ConceptualizationStage1McpService.resolveCatalogSelections({ catalog, values, allowFreeText: allowFreeText || false }),
+    conceptualization_stage1_create_market_analysis: ({ payload, mode, accessToken }) => ConceptualizationStage1McpService.execute({ payload, mode, accessToken }),
+    brandbook_get_options: ({ offering_service_type_id, business_sector_id, region_id, about }) => BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about }),
+    brandbook_create: ({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken }) => BrandbookMcpService.create({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken }),
+    brandbook_select_logo: ({ brand_book_id, logo_id }) => BrandbookMcpService.selectLogo({ brand_book_id, logo_id }),
+    user_get_conceptualizations: ({ accessToken }) => UserMcpService.getConceptualizations({ accessToken }),
+    user_get_company: ({ accessToken }) => UserMcpService.getCompany({ accessToken }),
+    payment_create_checkout: ({ accessToken }) => PaymentMcpService.createCheckout({ accessToken }),
+    payment_check_status: ({ serviceOrderId }) => PaymentMcpService.checkStatus({ serviceOrderId }),
+  }
+
+  if (!handlers[name]) {
+    console.log(JSON.stringify({ ok: false, error: `Unknown tool: ${name}` }))
+    process.exit(1)
+  }
+
+  try {
+    const result = await handlers[name](args)
+    console.log(JSON.stringify(result))
+    process.exit(0)
+  } catch (error) {
+    console.log(JSON.stringify({ ok: false, error: error?.message || 'Tool execution failed' }))
+    process.exit(1)
+  }
+}
+
+if (!(await runSingleToolCall())) {
+  const transport = new StdioServerTransport()
+  await server.connect(transport)
+}
