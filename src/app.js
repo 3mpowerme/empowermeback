@@ -9,6 +9,7 @@ const app = express()
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://127.0.0.1:3001',
   'https://d2v6ypobvyostd.cloudfront.net',
   'https://d2vbl2764n2th6.cloudfront.net',
   'http://empowerme-app-dev.s3-website-us-east-1.amazonaws.com',
