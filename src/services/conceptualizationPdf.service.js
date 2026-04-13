@@ -10,9 +10,11 @@ const s3 = new AWS.S3({
 
 const BUCKET = process.env.AWS_S3_BUCKET_DOCUMENTS || process.env.AWS_S3_BUCKET
 const APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
+const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
 
 function buildObjectUrl(bucket, region, key) {
-  return `https://${bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+  const safeRegion = region || AWS_REGION
+  return `https://${bucket}.s3.${safeRegion}.amazonaws.com/${encodeURIComponent(key).replace(/%2F/g, '/')}`
 }
 
 export const ConceptualizationPdfService = {
