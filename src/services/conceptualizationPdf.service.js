@@ -11,9 +11,11 @@ const s3 = new AWS.S3({
 })
 
 const BUCKET = process.env.AWS_S3_BUCKET_DOCUMENTS || process.env.AWS_S3_BUCKET
-const APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
+const RAW_APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
+const APP_URL = RAW_APP_URL.replace('http://localhost:', 'http://127.0.0.1:')
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
 const execFileAsync = promisify(execFile)
+const PAGE_TIMEOUT_MS = Number(process.env.CONCEPTUALIZATION_PDF_PAGE_TIMEOUT_MS || 120000)
 
 function buildObjectUrl(bucket, region, key) {
   const safeRegion = region || AWS_REGION
@@ -89,13 +91,15 @@ export const ConceptualizationPdfService = {
     try {
       browser = await launchBrowser()
       const page = await browser.newPage()
-      await page.goto(APP_URL, { waitUntil: 'networkidle2' })
+      page.setDefaultNavigationTimeout(PAGE_TIMEOUT_MS)
+      page.setDefaultTimeout(PAGE_TIMEOUT_MS)
+      await page.goto(APP_URL, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
       const frontendAuthState = authState || { accessToken }
       await page.evaluate((auth) => {
         localStorage.setItem('auth', JSON.stringify(auth))
       }, frontendAuthState)
-      await page.goto(report_url, { waitUntil: 'networkidle2', timeout: 120000 })
-      await page.waitForFunction(() => window.__REPORT_READY__ === true, { timeout: 15000 })
+      await page.goto(report_url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
+      await page.waitForFunction(() => window.__REPORT_READY__ === true, { timeout: PAGE_TIMEOUT_MS })
       await page.emulateMediaType('screen')
       const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' } })
 
