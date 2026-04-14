@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "deploy:dev": "dotenv -e .env.dev -- serverless deploy --stage dev"
+    "deploy:dev": "dotenv -e .env.dev -- serverless deploy --stage dev",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "keywords": [],
   "author": "",

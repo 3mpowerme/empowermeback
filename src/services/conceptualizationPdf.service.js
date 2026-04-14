@@ -1,4 +1,6 @@
 import AWS from 'aws-sdk'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import puppeteer from 'puppeteer'
 import { ConceptualizationReportArtifact } from '../models/conceptualizationReportArtifact.model.js'
 
@@ -11,10 +13,27 @@ const s3 = new AWS.S3({
 const BUCKET = process.env.AWS_S3_BUCKET_DOCUMENTS || process.env.AWS_S3_BUCKET
 const APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
+const execFileAsync = promisify(execFile)
 
 function buildObjectUrl(bucket, region, key) {
   const safeRegion = region || AWS_REGION
   return `https://${bucket}.s3.${safeRegion}.amazonaws.com/${encodeURIComponent(key).replace(/%2F/g, '/')}`
+}
+
+async function launchBrowser() {
+  try {
+    return await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+  } catch (error) {
+    const message = error?.message || ''
+    if (!message.includes('Could not find Chrome')) throw error
+
+    await execFileAsync('npx', ['puppeteer', 'browsers', 'install', 'chrome'], {
+      env: process.env,
+      timeout: 300000,
+    })
+
+    return puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+  }
 }
 
 export const ConceptualizationPdfService = {
@@ -68,7 +87,7 @@ export const ConceptualizationPdfService = {
 
     let browser
     try {
-      browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+      browser = await launchBrowser()
       const page = await browser.newPage()
       await page.goto(APP_URL, { waitUntil: 'networkidle2' })
       const frontendAuthState = authState || { accessToken }
