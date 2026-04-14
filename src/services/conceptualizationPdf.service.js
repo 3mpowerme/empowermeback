@@ -12,7 +12,7 @@ const s3 = new AWS.S3({
 
 const BUCKET = process.env.AWS_S3_BUCKET_DOCUMENTS || process.env.AWS_S3_BUCKET
 const RAW_APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
-const INTERNAL_APP_URL = (process.env.INTERNAL_APP_URL || RAW_APP_URL).replace('http://localhost:', 'http://127.0.0.1:')
+const APP_URL = RAW_APP_URL.replace('http://localhost:', 'http://127.0.0.1:')
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
 const execFileAsync = promisify(execFile)
 const PAGE_TIMEOUT_MS = Number(process.env.CONCEPTUALIZATION_PDF_PAGE_TIMEOUT_MS || 120000)
@@ -65,9 +65,7 @@ export const ConceptualizationPdfService = {
   async generateOfficialPdf({ conceptualizationId, accessToken, authState = null }) {
     const artifact = await this.ensureArtifactRecord(conceptualizationId)
     const s3_key = this.buildStorageKey(conceptualizationId)
-    const internalReportUrl = `${INTERNAL_APP_URL}/dashboard/conceptualization/official-report?id=${Number(conceptualizationId)}`
-    const publicReportUrl = `${RAW_APP_URL}/dashboard/conceptualization/official-report?id=${Number(conceptualizationId)}`
-    const report_url = internalReportUrl
+    const report_url = `${APP_URL}/dashboard/conceptualization/official-report?id=${Number(conceptualizationId)}`
 
     const generatingArtifact = await ConceptualizationReportArtifact.upsert({
       conceptualization_id: conceptualizationId,
@@ -95,28 +93,12 @@ export const ConceptualizationPdfService = {
       const page = await browser.newPage()
       page.setDefaultNavigationTimeout(PAGE_TIMEOUT_MS)
       page.setDefaultTimeout(PAGE_TIMEOUT_MS)
+      await page.goto(APP_URL, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
       const frontendAuthState = authState || { accessToken }
-
-      let navigated = false
-      let lastNavigationError = null
-      for (const baseUrl of [INTERNAL_APP_URL, RAW_APP_URL]) {
-        try {
-          const candidateReportUrl = `${baseUrl}/dashboard/conceptualization/official-report?id=${Number(conceptualizationId)}`
-          await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
-          await page.evaluate((auth) => {
-            localStorage.setItem('auth', JSON.stringify(auth))
-          }, frontendAuthState)
-          await page.goto(candidateReportUrl, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
-          navigated = true
-          break
-        } catch (error) {
-          lastNavigationError = error
-        }
-      }
-
-      if (!navigated) {
-        throw lastNavigationError || new Error('Could not open report URL in browser')
-      }
+      await page.evaluate((auth) => {
+        localStorage.setItem('auth', JSON.stringify(auth))
+      }, frontendAuthState)
+      await page.goto(report_url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
       await page.waitForFunction(() => window.__REPORT_READY__ === true, { timeout: PAGE_TIMEOUT_MS })
       await page.emulateMediaType('screen')
       const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' } })
