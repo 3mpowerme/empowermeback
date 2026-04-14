@@ -7,6 +7,7 @@ import { ConceptualizationStage1McpService } from '../services/conceptualization
 import { AuthMcpService } from '../services/authMcp.service.js'
 import { BrandbookMcpService } from '../services/brandbookMcp.service.js'
 import { UserMcpService } from '../services/userMcp.service.js'
+import { ConceptualizationPdfMcpService } from '../services/conceptualizationPdfMcp.service.js'
 import { PaymentMcpService } from '../services/paymentMcp.service.js'
 
 const server = new McpServer({
@@ -401,6 +402,38 @@ server.registerTool(
   }
 )
 
+server.registerTool(
+  'conceptualization_generate_official_pdf',
+  {
+    title: 'Generate official conceptualization PDF',
+    description: 'Generates and persists the official PDF artifact for a conceptualization.',
+    inputSchema: {
+      conceptualizationId: z.number().int().positive().describe('Conceptualization id.'),
+      accessToken: z.string().describe('User JWT access token.'),
+      authState: z.any().optional().describe('Optional frontend-like auth state used for headless rendering.'),
+    },
+  },
+  async ({ conceptualizationId, accessToken, authState }) => {
+    const result = await ConceptualizationPdfMcpService.generate({ conceptualizationId, accessToken, authState })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'conceptualization_get_official_pdf_download_url',
+  {
+    title: 'Get official conceptualization PDF download URL',
+    description: 'Returns the signed download URL for the official conceptualization PDF when available.',
+    inputSchema: {
+      conceptualizationId: z.number().int().positive().describe('Conceptualization id.'),
+    },
+  },
+  async ({ conceptualizationId }) => {
+    const result = await ConceptualizationPdfMcpService.getDownloadUrl({ conceptualizationId })
+    return asText(result)
+  }
+)
+
 async function runSingleToolCall() {
   const idx = process.argv.indexOf('--tool-call')
   if (idx === -1) return false
@@ -424,6 +457,8 @@ async function runSingleToolCall() {
     user_get_company: ({ accessToken }) => UserMcpService.getCompany({ accessToken }),
     payment_create_checkout: ({ accessToken }) => PaymentMcpService.createCheckout({ accessToken }),
     payment_check_status: ({ serviceOrderId }) => PaymentMcpService.checkStatus({ serviceOrderId }),
+    conceptualization_generate_official_pdf: ({ conceptualizationId, accessToken, authState }) => ConceptualizationPdfMcpService.generate({ conceptualizationId, accessToken, authState }),
+    conceptualization_get_official_pdf_download_url: ({ conceptualizationId }) => ConceptualizationPdfMcpService.getDownloadUrl({ conceptualizationId }),
   }
 
   if (!handlers[name]) {

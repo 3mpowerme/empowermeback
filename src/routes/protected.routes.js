@@ -17,6 +17,7 @@ import companyTaxInfoRoutes from '../routes/companyTaxInfo.routes.js'
 import legalRepresentativeRoutes from '../routes/legalRepresentative.routes.js'
 import marketAnalysisRoutes from '../routes/marketAnalysis.routes.js'
 import conceptualizationRoutes from '../routes/conceptualization.routes.js'
+import conceptualizationPdfRoutes from '../routes/conceptualizationPdf.routes.js'
 import conceptualizationClaudeRoutes from '../routes/conceptualizationClaude.routes.js'
 import serviceRequestRoutes from '../routes/serviceRequest.routes.js'
 import appointmentRoutes from '../routes/appointment.routes.js'
@@ -85,6 +86,7 @@ router.use('/company-tax-info', companyTaxInfoRoutes)
 router.use('/company-legal-representative', legalRepresentativeRoutes)
 router.use('/market-analysis', marketAnalysisRoutes)
 router.use('/conceptualization', conceptualizationRoutes)
+router.use('/conceptualization', conceptualizationPdfRoutes)
 // router.use('/conceptualization/claude', conceptualizationClaudeRoutes)
 router.use('/service-request', serviceRequestRoutes)
 router.use('/appointment', appointmentRoutes)
