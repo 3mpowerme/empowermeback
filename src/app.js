@@ -7,6 +7,7 @@ import webhookRoutes from './routes/webhook.routes.js'
 const app = express()
 
 const allowedOrigins = [
+  'http://192.168.1.74:3001',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3001',

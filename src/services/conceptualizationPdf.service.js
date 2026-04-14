@@ -15,7 +15,9 @@ const RAW_APP_URL = process.env.APP_URL || 'https://app.empowermedev.com'
 const APP_URL = RAW_APP_URL.replace('http://localhost:', 'http://127.0.0.1:')
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
 const execFileAsync = promisify(execFile)
-const PAGE_TIMEOUT_MS = Number(process.env.CONCEPTUALIZATION_PDF_PAGE_TIMEOUT_MS || 120000)
+const PAGE_TIMEOUT_MS = Number(
+  process.env.CONCEPTUALIZATION_PDF_PAGE_TIMEOUT_MS || 120000
+)
 
 function buildObjectUrl(bucket, region, key) {
   const safeRegion = region || AWS_REGION
@@ -24,7 +26,10 @@ function buildObjectUrl(bucket, region, key) {
 
 async function launchBrowser() {
   try {
-    return await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    return await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
   } catch (error) {
     const message = error?.message || ''
     if (!message.includes('Could not find Chrome')) throw error
@@ -34,7 +39,10 @@ async function launchBrowser() {
       timeout: 300000,
     })
 
-    return puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    return puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
   }
 }
 
@@ -44,10 +52,11 @@ export const ConceptualizationPdfService = {
   },
 
   async ensureArtifactRecord(conceptualizationId) {
-    const existing = await ConceptualizationReportArtifact.getByConceptualizationId(
-      conceptualizationId,
-      'official_pdf'
-    )
+    const existing =
+      await ConceptualizationReportArtifact.getByConceptualizationId(
+        conceptualizationId,
+        'official_pdf'
+      )
     if (existing) return existing
 
     return ConceptualizationReportArtifact.upsert({
@@ -62,11 +71,15 @@ export const ConceptualizationPdfService = {
     return this.ensureArtifactRecord(conceptualizationId)
   },
 
-  async generateOfficialPdf({ conceptualizationId, accessToken, authState = null }) {
+  async generateOfficialPdf({
+    conceptualizationId,
+    accessToken,
+    authState = null,
+  }) {
     const artifact = await this.ensureArtifactRecord(conceptualizationId)
     const s3_key = this.buildStorageKey(conceptualizationId)
     const report_url = `${APP_URL}/dashboard/conceptualization/official-report?id=${Number(conceptualizationId)}`
-
+    console.log('report_url', report_url)
     const generatingArtifact = await ConceptualizationReportArtifact.upsert({
       conceptualization_id: conceptualizationId,
       variant: 'official_pdf',
@@ -93,22 +106,35 @@ export const ConceptualizationPdfService = {
       const page = await browser.newPage()
       page.setDefaultNavigationTimeout(PAGE_TIMEOUT_MS)
       page.setDefaultTimeout(PAGE_TIMEOUT_MS)
-      await page.goto(APP_URL, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
+      await page.goto(APP_URL, {
+        waitUntil: 'domcontentloaded',
+        timeout: PAGE_TIMEOUT_MS,
+      })
       const frontendAuthState = authState || { accessToken }
       await page.evaluate((auth) => {
         localStorage.setItem('auth', JSON.stringify(auth))
       }, frontendAuthState)
-      await page.goto(report_url, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT_MS })
-      await page.waitForFunction(() => window.__REPORT_READY__ === true, { timeout: PAGE_TIMEOUT_MS })
+      await page.goto(report_url, {
+        waitUntil: 'domcontentloaded',
+        timeout: PAGE_TIMEOUT_MS,
+      })
+      await page.waitForFunction(() => window.__REPORT_READY__ === true, {
+        timeout: PAGE_TIMEOUT_MS,
+      })
       await page.emulateMediaType('screen')
-      const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' } })
-
-      await s3.putObject({
-        Bucket: BUCKET,
-        Key: s3_key,
-        Body: pdfBuffer,
-        ContentType: 'application/pdf',
-      }).promise()
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
+      })
+      await s3
+        .putObject({
+          Bucket: BUCKET,
+          Key: s3_key,
+          Body: pdfBuffer,
+          ContentType: 'application/pdf',
+        })
+        .promise()
 
       const readyArtifact = await ConceptualizationReportArtifact.upsert({
         conceptualization_id: conceptualizationId,
