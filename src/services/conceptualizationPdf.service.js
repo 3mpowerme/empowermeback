@@ -118,9 +118,13 @@ export const ConceptualizationPdfService = {
         waitUntil: 'domcontentloaded',
         timeout: PAGE_TIMEOUT_MS,
       })
-      await page.waitForFunction(() => window.__REPORT_READY__ === true, {
-        timeout: PAGE_TIMEOUT_MS,
-      })
+      try {
+        await page.waitForFunction(() => window.__REPORT_READY__ === true, {
+          timeout: 30000,
+        })
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 10000))
+      }
       await page.emulateMediaType('screen')
       const pdfBuffer = await page.pdf({
         format: 'A4',
