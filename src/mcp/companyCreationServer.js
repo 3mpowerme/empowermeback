@@ -291,16 +291,39 @@ server.registerTool(
   'brandbook_get_options',
   {
     title: 'Get brandbook options',
-    description: 'Generates brand name, slogan and colorimetry options for a conceptualization using AI. Returns 6 options of each.',
+    description: 'Generates brand name, slogan and colorimetry options for a conceptualization using AI. Returns 6 options of each, plus a PNG preview of all color palettes.',
     inputSchema: {
       offering_service_type_id: z.union([z.number().int().positive(), z.array(z.number().int().positive())]).describe('Offering service type id (scalar or array).'),
       business_sector_id: z.number().int().positive().describe('Business sector id.'),
       region_id: z.number().int().positive().describe('Region id.'),
       about: z.string().min(5).max(500).describe('Business idea description.'),
+      sessionId: z.string().optional().describe('Session ID for palette preview image generation.'),
     },
   },
-  async ({ offering_service_type_id, business_sector_id, region_id, about }) => {
-    const result = await BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about })
+  async ({ offering_service_type_id, business_sector_id, region_id, about, sessionId }) => {
+    const result = await BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about, sessionId })
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'brandbook_get_color_palette_preview',
+  {
+    title: 'Generate color palette preview image',
+    description: 'Generates a PNG preview image of color palettes and uploads it to S3. Returns the public URL to the image.',
+    inputSchema: {
+      colorimetries: z.array(
+        z.object({
+          name: z.string().optional(),
+          label: z.string().optional(),
+          colors: z.array(z.string().regex(/^#[0-9a-f]{6}$/i)).min(1),
+        })
+      ).min(1).max(10).describe('Array of color palettes with color arrays.'),
+      sessionId: z.string().describe('Session ID for organizing uploaded images.'),
+    },
+  },
+  async ({ colorimetries, sessionId }) => {
+    const result = await BrandbookMcpService.getColorPalettePreview({ colorimetries, sessionId })
     return asText(result)
   }
 )

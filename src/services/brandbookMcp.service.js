@@ -1,5 +1,6 @@
 import { validateAccessToken } from '../utils/jwtValidator.js'
 import { ConceptualizationController } from '../controllers/conceptualization/conceptualization.controller.js'
+import { generatePalettePreviewImage } from '../utils/brandbookPaletteGenerator.js'
 
 const LOGO_TYPES = [
   { label: 'Basado en iconos', value: 'Basado en iconos' },
@@ -44,7 +45,7 @@ export const BrandbookMcpService = {
     return { ok: true, updated: res._body }
   },
 
-  async getOptions({ offering_service_type_id, business_sector_id, region_id, about }) {
+  async getOptions({ offering_service_type_id, business_sector_id, region_id, about, sessionId }) {
     const req = buildMockReq({
       body: {
         offering_service_type_id: Array.isArray(offering_service_type_id)
@@ -66,11 +67,39 @@ export const BrandbookMcpService = {
       }
     }
 
-    return {
+    const result = {
       ok: true,
       brandNames: res._body.brandNames || [],
       slogans: res._body.slogans || [],
       colorimetries: res._body.colorimetries || [],
+    }
+
+    // Generar imagen de preview de paletas si hay colorimetries y sessionId
+    if (sessionId && Array.isArray(result.colorimetries) && result.colorimetries.length > 0) {
+      try {
+        const palettePreview = await generatePalettePreviewImage(result.colorimetries, sessionId)
+        if (palettePreview.ok && palettePreview.imageUrl) {
+          result.imageUrl = palettePreview.imageUrl
+        }
+      } catch (error) {
+        // Log pero no fallar - imagen es opcional
+        console.error('Error generating palette preview:', error)
+      }
+    }
+
+    return result
+  },
+
+  async getColorPalettePreview({ colorimetries, sessionId }) {
+    if (!sessionId) {
+      return { ok: false, error: 'sessionId is required' }
+    }
+
+    try {
+      const result = await generatePalettePreviewImage(colorimetries, sessionId)
+      return result
+    } catch (error) {
+      return { ok: false, error: error.message }
     }
   },
 
