@@ -32,6 +32,75 @@ const STEP_DEFINITIONS = {
   },
 }
 
+const STEP_DETAILS = {
+  offering_service_type: {
+    title: 'What do you offer?',
+    description: 'Select the type of offering for your business idea',
+    fields: [
+      {
+        name: 'offering_service_type_id',
+        type: 'select',
+        required: true,
+        catalogName: 'offering_service_type',
+        description: 'Product, Service, or Both',
+        examples: ['Product', 'Service', 'Hybrid'],
+      },
+    ],
+  },
+  business_profile: {
+    title: 'Business profile and idea description',
+    description: 'Tell us about your business sector, location, and idea',
+    fields: [
+      {
+        name: 'business_sector_id',
+        type: 'select',
+        required: false,
+        catalogName: 'business_sector',
+        description: 'Select sector from catalog (e.g., "Technology", "Retail", "Services")',
+      },
+      {
+        name: 'business_sector_other',
+        type: 'text',
+        required: false,
+        description: 'If sector not in catalog, describe it here',
+        validation: 'Free text, max 150 characters',
+      },
+      {
+        name: 'region_id',
+        type: 'select',
+        required: true,
+        catalogName: 'region',
+        description: 'Select your region (e.g., "Metropolitana", "Valparaíso")',
+      },
+      {
+        name: 'about',
+        type: 'text',
+        required: true,
+        placeholder: 'Describe your business idea',
+        validation: 'Between 10 and 500 characters',
+        examples: [
+          'I want to create an e-commerce platform for handmade crafts',
+          'Software consulting service for small businesses',
+          'Sustainable fashion brand focusing on recycled materials',
+        ],
+      },
+    ],
+    note: 'Either business_sector_id OR business_sector_other must be provided',
+  },
+  brandbook_preference: {
+    title: 'Do you want a brandbook?',
+    description: 'Would you like us to generate a brandbook with name, slogan, colors, and logo?',
+    fields: [
+      {
+        name: 'wantsBrandbook',
+        type: 'boolean',
+        required: true,
+        description: 'Yes or No. Brandbook includes: brand name, slogan, color palette, and logo design',
+      },
+    ],
+  },
+}
+
 const STAGE1_DRAFT_SCHEMA = Joi.object({
   offering_service_type_id: Joi.number().integer().positive().required(),
   service_order_id: Joi.number().integer().positive().optional(),
@@ -99,6 +168,21 @@ function normalizeStage1Payload(payload = {}) {
 export const ConceptualizationStage1McpService = {
   getStepDefinitions() {
     return clone(STEP_DEFINITIONS)
+  },
+
+  getDetailedStepInformation(step = null) {
+    if (step) {
+      const detail = STEP_DETAILS[step]
+      if (!detail) {
+        throw new Error(`Unknown conceptualization step: ${step}`)
+      }
+      return detail
+    }
+    // Return all data collection steps (excluding welcome)
+    return ['offering_service_type', 'business_profile', 'brandbook_preference'].map((stepKey) => ({
+      stepKey,
+      ...STEP_DETAILS[stepKey],
+    }))
   },
 
   async getCatalogs(names = []) {

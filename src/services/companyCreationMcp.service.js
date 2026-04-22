@@ -174,9 +174,189 @@ async function getCatalogByName(name) {
   return loader()
 }
 
+const STEP_DETAILS = {
+  company_identity: {
+    title: 'Company identity',
+    description: 'Name of your company',
+    fields: [
+      {
+        name: 'company_name',
+        type: 'text',
+        required: true,
+        placeholder: 'Enter company name (e.g., "TechSolutions SpA")',
+        validation: 'Between 3 and 100 characters',
+        examples: ['TechSolutions SpA', 'Consultoría ABC', 'E-commerce XYZ'],
+      },
+    ],
+  },
+  today_focus: {
+    title: 'Today focus',
+    description: 'What is your main focus today?',
+    fields: [
+      {
+        name: 'today_focus',
+        type: 'select',
+        required: true,
+        catalogName: 'today_focus',
+        description: 'Select from available options (e.g., "Start your company", "Formalize existing business")',
+      },
+    ],
+  },
+  offering_and_channels: {
+    title: 'Offering and customer channels',
+    description: 'What you offer and how customers reach you',
+    fields: [
+      {
+        name: 'company_offering',
+        type: 'select',
+        required: true,
+        catalogName: 'company_offering',
+        description: 'Select offering type (Products, Services, or Both)',
+      },
+      {
+        name: 'customer_service_channel',
+        type: 'select',
+        required: true,
+        catalogName: 'customer_service_channel',
+        description: 'How do customers contact you? (Online, In-person, Both)',
+      },
+    ],
+  },
+  business_profile: {
+    title: 'Business profile',
+    description: 'Your business sector and description',
+    fields: [
+      {
+        name: 'business_sector_id',
+        type: 'select',
+        required: false,
+        catalogName: 'business_sector',
+        description: 'Select sector from catalog (e.g., "Technology", "Retail", "Services")',
+      },
+      {
+        name: 'business_sector_other',
+        type: 'text',
+        required: false,
+        description: 'If sector not in catalog, describe it here',
+        validation: 'Free text, max 100 characters',
+      },
+      {
+        name: 'about',
+        type: 'text',
+        required: true,
+        placeholder: 'Describe your business idea',
+        validation: 'Between 10 and 500 characters',
+        examples: [
+          'We provide software consulting for SMEs',
+          'Online retail of handmade crafts',
+        ],
+      },
+    ],
+    note: 'Either business_sector_id OR business_sector_other must be provided',
+  },
+  location_and_phone: {
+    title: 'Location and phone',
+    description: 'Where your company operates and how to contact',
+    fields: [
+      {
+        name: 'region_id',
+        type: 'select',
+        required: true,
+        catalogName: 'region',
+        description: 'Select your region (e.g., "Metropolitana", "Valparaíso")',
+      },
+      {
+        name: 'street',
+        type: 'text',
+        required: true,
+        placeholder: 'Street and number (e.g., "Paseo Ahumada 123")',
+        validation: 'Between 5 and 150 characters',
+      },
+      {
+        name: 'zip_code',
+        type: 'text',
+        required: true,
+        placeholder: 'Postal code (e.g., "8320000")',
+        validation: 'Between 3 and 20 characters',
+      },
+      {
+        name: 'phone_number',
+        type: 'text',
+        required: true,
+        placeholder: 'Phone number (e.g., "912345678")',
+        validation: 'Between 7 and 20 characters',
+      },
+    ],
+  },
+  employees: {
+    title: 'Employees',
+    description: 'Do you have employees?',
+    fields: [
+      {
+        name: 'has_employees',
+        type: 'boolean',
+        required: true,
+        description: 'Yes (1) or No (2)',
+      },
+    ],
+  },
+  registration_status: {
+    title: 'Registration status',
+    description: 'Is your company legally registered?',
+    fields: [
+      {
+        name: 'is_registered_company',
+        type: 'boolean',
+        required: true,
+        description: 'Yes (1) or No (2)',
+      },
+    ],
+  },
+  tax_status: {
+    title: 'Tax status - SII',
+    description: 'Have you started activities in the SII (tax authority)?',
+    fields: [
+      {
+        name: 'hasStartedActivities',
+        type: 'boolean',
+        required: true,
+        description: 'Yes (1) or No (2)',
+      },
+    ],
+  },
+  marketing_source: {
+    title: 'Marketing source',
+    description: 'How did you hear about EmpowerMe?',
+    fields: [
+      {
+        name: 'marketing_source',
+        type: 'select',
+        required: true,
+        catalogName: 'marketing_source',
+        description: 'Select source (e.g., "Friends", "Ads", "Social Media")',
+      },
+    ],
+  },
+}
+
 export const CompanyCreationMcpService = {
   getStepDefinitions() {
     return clone(STEP_DEFINITIONS)
+  },
+
+  getDetailedStepInformation(step = null) {
+    if (step) {
+      const detail = STEP_DETAILS[step]
+      if (!detail) {
+        throw new Error(`Unknown step: ${step}`)
+      }
+      return detail
+    }
+    // Return all steps in order
+    return STEP_ORDER.map((stepKey) => ({
+      stepKey,
+      ...STEP_DETAILS[stepKey],
+    }))
   },
 
   async getCatalogs(names = []) {

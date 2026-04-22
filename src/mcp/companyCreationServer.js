@@ -94,6 +94,22 @@ server.registerTool(
 )
 
 server.registerTool(
+  'company_creation_get_step_details',
+  {
+    title: 'Get detailed information about a company creation step',
+    description:
+      'Returns detailed information about what data is needed for a specific step, including field types, validation rules, catalogs, and examples. Use this BEFORE asking the user for data.',
+    inputSchema: {
+      step: z.string().optional().describe('Specific step name (e.g., "company_identity"). Omit to get details for all steps.'),
+    },
+  },
+  async ({ step }) => {
+    const result = CompanyCreationMcpService.getDetailedStepInformation(step)
+    return asText(result)
+  }
+)
+
+server.registerTool(
   'company_creation_get_catalogs',
   {
     title: 'Get company creation catalogs',
@@ -232,6 +248,22 @@ server.registerTool(
   },
   async ({ catalogs }) => {
     const result = await ConceptualizationStage1McpService.getCatalogs(catalogs || [])
+    return asText(result)
+  }
+)
+
+server.registerTool(
+  'conceptualization_stage1_get_step_details',
+  {
+    title: 'Get detailed information about a conceptualization step',
+    description:
+      'Returns detailed information about what data is needed for a specific conceptualization step, including field types, validation rules, catalogs, and examples. Use this BEFORE asking the user for data.',
+    inputSchema: z.object({
+      step: z.string().optional().describe('Specific step name (e.g., "offering_service_type", "business_profile", "brandbook_preference"). Omit to get details for all steps.'),
+    }),
+  },
+  async ({ step }) => {
+    const result = ConceptualizationStage1McpService.getDetailedStepInformation(step)
     return asText(result)
   }
 )
