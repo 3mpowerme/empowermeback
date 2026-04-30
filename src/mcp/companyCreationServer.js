@@ -473,7 +473,7 @@ async function runSingleToolCall() {
     conceptualization_stage1_get_catalogs: ({ catalogs }) => ConceptualizationStage1McpService.getCatalogs(catalogs || []),
     conceptualization_stage1_resolve_catalog_options: ({ catalog, values, allowFreeText }) => ConceptualizationStage1McpService.resolveCatalogSelections({ catalog, values, allowFreeText: allowFreeText || false }),
     conceptualization_stage1_create_market_analysis: ({ payload, mode, accessToken }) => ConceptualizationStage1McpService.execute({ payload, mode, accessToken }),
-    brandbook_get_options: ({ offering_service_type_id, business_sector_id, region_id, about }) => BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about }),
+    brandbook_get_options: ({ offering_service_type_id, business_sector_id, region_id, about, sessionId }) => BrandbookMcpService.getOptions({ offering_service_type_id, business_sector_id, region_id, about, sessionId }),
     brandbook_create: ({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken }) => BrandbookMcpService.create({ brand_name, slogan, logo_type, colorimetry, colorimetry_name, conceptualization_id, accessToken }),
     brandbook_select_logo: ({ brand_book_id, logo_id }) => BrandbookMcpService.selectLogo({ brand_book_id, logo_id }),
     user_get_conceptualizations: ({ accessToken }) => UserMcpService.getConceptualizations({ accessToken }),
