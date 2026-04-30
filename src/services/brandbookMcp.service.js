@@ -74,18 +74,7 @@ export const BrandbookMcpService = {
       colorimetries: res._body.colorimetries || [],
     }
 
-    // Generar imagen de preview de paletas si hay colorimetries y sessionId
-    if (sessionId && Array.isArray(result.colorimetries) && result.colorimetries.length > 0) {
-      try {
-        const palettePreview = await generatePalettePreviewImage(result.colorimetries, sessionId)
-        if (palettePreview.ok && palettePreview.imageUrl) {
-          result.imageUrl = palettePreview.imageUrl
-        }
-      } catch (error) {
-        // Log pero no fallar - imagen es opcional
-        console.error('Error generating palette preview:', error)
-      }
-    }
+    // Imagen se genera localmente en OpenClaw - no se genera en backend
 
     return result
   },
